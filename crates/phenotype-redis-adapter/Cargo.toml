@@ -1,0 +1,32 @@
+[package]
+name = "phenotype-redis-adapter"
+version = "0.1.0"
+edition = "2021"
+authors = ["Phenotype Team"]
+license = "MIT"
+description = "Redis adapter implementing Cache port for hexagonal architecture"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Redis
+deadpool-redis = "0.14"
+redis = { version = "0.25", features = ["tokio-comp", "connection-manager"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Port interfaces
+phenotype-port-interfaces = { path = "../phenotype-port-interfaces" }
+
+# Error handling
+thiserror = "1"
+anyhow = "1"
+
+# Logging
+tracing = "0.1"
+
+[dev-dependencies]
+tokio-test = "0.4"

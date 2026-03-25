@@ -6,6 +6,9 @@ members = [
     "crates/phenotype-policy-engine",
     "crates/phenotype-state-machine",
     "crates/phenotype-port-interfaces",
+    "crates/phenotype-postgres-adapter",
+    "crates/phenotype-redis-adapter",
+    "crates/phenotype-http-adapter",
 ]
 
 [workspace.package]
