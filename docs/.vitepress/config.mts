@@ -1,27 +1,30 @@
-import { defineConfig } from 'vitepress'
+import { createPhenotypeConfig } from '../../vendor/phenodocs/packages/docs/src/config/index.ts'
 
-const isPagesBuild = process.env.GITHUB_ACTIONS === 'true' || process.env.GITHUB_PAGES === 'true'
-const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1] || 'phenotype-shared'
-const docsBase = isPagesBuild ? `/${repoName}/` : '/'
-
-export default defineConfig({
+export default createPhenotypeConfig({
   title: 'phenotype-shared',
   description: 'Shared Phenotype infrastructure components',
-  lang: 'en-US',
-  base: docsBase,
-  lastUpdated: true,
-  cleanUrls: true,
-  themeConfig: {
-    siteTitle: 'phenotype-shared',
-    nav: [{ text: 'Guide', link: '/guide/' }],
-    sidebar: {
-      '/guide/': [
-        { text: 'Guide', items: [{ text: 'Getting Started', link: '/guide/' }] }
-      ]
-    },
-    socialLinks: [{ icon: 'github', link: `https://github.com/KooshaPari/${repoName}` }],
-    search: { provider: 'local' }
+  githubRepo: 'phenotype-shared',
+  nav: [
+    { text: 'Guide', link: '/guide/' },
+    { text: 'Reference', link: '/reference/' },
+  ],
+  sidebar: {
+    '/guide/': [
+      {
+        text: 'Guide',
+        items: [
+          { text: 'Getting Started', link: '/guide/' },
+        ],
+      },
+    ],
+    '/reference/': [
+      {
+        text: 'Reference',
+        items: [
+          { text: 'FR Tracker', link: '/reference/FR_TRACKER' },
+          { text: 'Code Entity Map', link: '/reference/CODE_ENTITY_MAP' },
+        ],
+      },
+    ],
   },
-  markdown: { lineNumbers: true },
-  ignoreDeadLinks: true
 })

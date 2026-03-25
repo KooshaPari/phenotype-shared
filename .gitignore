@@ -8,3 +8,4 @@ Cargo.lock
 docs/.vitepress/cache
 docs/.vitepress/dist
 node_modules
+vendor/phenodocs/node_modules/

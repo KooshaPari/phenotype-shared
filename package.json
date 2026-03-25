@@ -5,6 +5,9 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"
   },
+  "dependencies": {
+    "@phenotype/docs": "file:vendor/phenodocs/packages/docs"
+  },
   "devDependencies": {
     "vitepress": "^1.6.4"
   }
