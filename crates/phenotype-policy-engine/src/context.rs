@@ -32,7 +32,6 @@ impl EvaluationContext {
             serde_json::Value::Object(map) => {
                 let facts = map
                     .into_iter()
-                    .map(|(k, v)| (k, v))
                     .collect();
                 Self { facts }
             }

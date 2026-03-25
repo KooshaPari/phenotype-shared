@@ -24,6 +24,7 @@ struct StoredEvent {
     hash: String,
     prev_hash: String,
     payload_json: serde_json::Value,
+    #[allow(dead_code)] // stored for audit/replay but read access not yet implemented
     event_type: String,
     actor: String,
     timestamp: DateTime<Utc>,
