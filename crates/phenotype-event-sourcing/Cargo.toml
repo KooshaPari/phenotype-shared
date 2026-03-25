@@ -5,8 +5,14 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+# Port interfaces for hexagonal architecture
+phenotype-port-interfaces = { path = "../phenotype-port-interfaces" }
+
+# Serialization
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+# Utilities
 chrono = { workspace = true }
 sha2 = { workspace = true }
 thiserror = { workspace = true }

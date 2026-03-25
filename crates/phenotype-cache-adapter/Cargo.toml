@@ -6,7 +6,13 @@ license.workspace = true
 description = "Generic two-tier cache with L1 (LRU) + L2 (DashMap), TTL expiration, and metrics hooks"
 
 [dependencies]
+# Port interfaces for hexagonal architecture
+phenotype-port-interfaces = { path = "../phenotype-port-interfaces" }
+
+# Serialization
 serde = { workspace = true }
+
+# Cache implementations
 dashmap = { workspace = true }
 lru = { workspace = true }
 parking_lot = { workspace = true }
