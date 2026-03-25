@@ -1,8 +1,50 @@
 //! Generic two-tier cache with L1 (LRU) + L2 (DashMap), TTL expiration, and metrics hooks.
 //!
-//! L1 is a bounded LRU cache for hot data (fast, capacity-limited).
-//! L2 is a concurrent DashMap for warm data (unbounded, TTL-evicted).
-//! On L1 miss + L2 hit, entries are promoted to L1.
+//! # Architecture
+//!
+//! This crate follows Hexagonal Architecture principles:
+//!
+//! ```text
+//! ┌─────────────────────────────────────────────────────────┐
+//! │                    ADAPTERS (Outer)                    │
+//! │   HTTP Controllers, CLI, DB, Cache, External Clients   │
+//! └───────────────────────────┬─────────────────────────────┘
+//!                             │ depends on
+//!                             ▼
+//! ┌─────────────────────────────────────────────────────────┐
+//! │                 APPLICATION (Middle)                   │
+//! │         Use Cases, Commands, Queries, DTOs              │
+//! └───────────────────────────┬─────────────────────────────┘
+//!                             │ depends on
+//!                             ▼
+//! ┌─────────────────────────────────────────────────────────┐
+//! │                   DOMAIN (Inner)                       │
+//! │    Entities, Value Objects, Domain Services, Ports     │
+//! └─────────────────────────────────────────────────────────┘
+//! ```
+//!
+//! # Modules
+//!
+//! - `domain`: Core business logic (entities, ports, services)
+//! - `application`: Use cases and DTOs
+//! - `adapters`: Infrastructure implementations
+
+pub mod domain;
+pub mod application;
+pub mod adapters;
+
+// Re-export commonly used types for convenience
+pub use domain::entities::{CacheConfig, CacheEntry};
+pub use domain::ports::{CacheService, MetricsCollector, EntryStore};
+pub use domain::services::{CacheConfigBuilder, CacheStatsCalculator, TtlValidator};
+pub use application::dto::{CacheMetricsDto, CacheRequest, CacheResponse, BatchResult};
+pub use application::use_cases::{GetFromCache, InsertIntoCache, RemoveFromCache, GetCacheMetrics};
+pub use adapters::outbound::{InMemoryEntryStore, NoopMetricsCollector, AtomicMetricsCollector};
+
+// ============================================================================
+// Backward-Compatible API (Legacy)
+// ============================================================================
+// These types maintain backward compatibility with the original flat API.
 
 use dashmap::DashMap;
 use lru::LruCache;
@@ -13,6 +55,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 /// Cache metrics for observability.
+/// Backward-compatible alias for `CacheMetricsDto`.
 #[derive(Debug, Clone, Default)]
 pub struct CacheMetrics {
     pub l1_hits: u64,
@@ -23,7 +66,27 @@ pub struct CacheMetrics {
     pub expirations: u64,
 }
 
+impl From<CacheMetricsDto> for CacheMetrics {
+    fn from(dto: CacheMetricsDto) -> Self {
+        Self {
+            l1_hits: dto.l1_hits,
+            l2_hits: dto.l2_hits,
+            misses: dto.misses,
+            promotions: dto.promotions,
+            evictions: dto.evictions,
+            expirations: dto.expirations,
+        }
+    }
+}
+
+/// No-op metrics hook (default).
+/// Backward-compatible alias for `NoopMetricsCollector`.
+pub struct NoopMetrics;
+
+impl MetricsHook for NoopMetrics {}
+
 /// Metrics hook trait for pluggable observability.
+/// Backward-compatible interface.
 pub trait MetricsHook: Send + Sync {
     fn on_l1_hit(&self) {}
     fn on_l2_hit(&self) {}
@@ -33,37 +96,15 @@ pub trait MetricsHook: Send + Sync {
     fn on_expiration(&self) {}
 }
 
-/// No-op metrics hook (default).
-struct NoopMetrics;
-impl MetricsHook for NoopMetrics {}
-
-#[derive(Clone)]
-struct CacheEntry<V> {
-    value: V,
-    expires_at: Instant,
-}
-
-impl<V> CacheEntry<V> {
-    fn new(value: V, ttl: Duration) -> Self {
-        Self {
-            value,
-            expires_at: Instant::now() + ttl,
-        }
-    }
-
-    fn is_expired(&self) -> bool {
-        Instant::now() >= self.expires_at
-    }
-}
-
 /// Two-tier cache: L1 (LRU, bounded) + L2 (DashMap, concurrent).
+/// This is the main backward-compatible API for existing consumers.
 pub struct TieredCache<K, V>
 where
     K: Hash + Eq + Clone + Send + Sync + 'static,
     V: Clone + Send + Sync + 'static,
 {
-    l1: Arc<RwLock<LruCache<K, CacheEntry<V>>>>,
-    l2: Arc<DashMap<K, CacheEntry<V>>>,
+    l1: Arc<RwLock<LruCache<DomainCacheEntry<V>, CacheEntry<V>>>>,
+    l2: Arc<DashMap<K, DomainCacheEntry<V>>>,
     default_ttl: Duration,
     metrics: Arc<RwLock<CacheMetrics>>,
     hook: Arc<dyn MetricsHook>,
@@ -157,7 +198,7 @@ where
 
     /// Insert a value with a custom TTL.
     pub fn insert_with_ttl(&self, key: K, value: V, ttl: Duration) {
-        let entry = CacheEntry::new(value, ttl);
+        let entry = CacheEntry::new(value, ttl.as_secs());
         {
             let mut l1 = self.l1.write();
             l1.put(key.clone(), entry.clone());
@@ -207,6 +248,39 @@ where
 {
     fn default() -> Self {
         Self::new(1000, Duration::from_secs(3600))
+    }
+}
+
+// Re-export the domain CacheEntry for use in the legacy API
+pub use domain::entities::CacheEntry as DomainCacheEntry;
+
+// Implement MetricsHook for domain MetricsCollector
+impl<T: MetricsCollector + 'static> From<T> for Arc<dyn MetricsHook> {
+    fn from(collector: T) -> Self {
+        Arc::new(CollectorAdapter(collector))
+    }
+}
+
+struct CollectorAdapter<T>(T);
+
+impl<T: crate::domain::ports::outbound::MetricsCollector> MetricsHook for CollectorAdapter<T> {
+    fn on_l1_hit(&self) {
+        self.0.record_l1_hit();
+    }
+    fn on_l2_hit(&self) {
+        self.0.record_l2_hit();
+    }
+    fn on_miss(&self) {
+        self.0.record_miss();
+    }
+    fn on_promotion(&self) {
+        self.0.record_promotion();
+    }
+    fn on_eviction(&self) {
+        self.0.record_eviction();
+    }
+    fn on_expiration(&self) {
+        self.0.record_expiration();
     }
 }
 
@@ -292,5 +366,56 @@ mod tests {
         let cache: TieredCache<String, i32> = TieredCache::default();
         cache.insert("x".to_string(), 99);
         assert_eq!(cache.get(&"x".to_string()), Some(99));
+    }
+
+    // Tests for new hexagonal architecture
+    #[test]
+    fn cache_config_builder() {
+        use domain::services::CacheConfigBuilder;
+
+        let config = CacheConfigBuilder::new()
+            .l1_capacity(500)
+            .default_ttl_secs(7200)
+            .build();
+
+        assert_eq!(config.l1_capacity, 500);
+        assert_eq!(config.default_ttl_secs, 7200);
+    }
+
+    #[test]
+    fn cache_stats_calculator() {
+        use domain::services::CacheStatsCalculator;
+
+        assert_eq!(CacheStatsCalculator::hit_rate(80, 20), 0.8);
+        assert_eq!(CacheStatsCalculator::hit_rate(0, 0), 0.0);
+    }
+
+    #[test]
+    fn ttl_validator() {
+        use domain::services::TtlValidator;
+
+        assert!(TtlValidator::is_valid(3600));
+        assert!(!TtlValidator::is_valid(0));
+        assert!(!TtlValidator::is_valid(u64::MAX));
+        assert_eq!(TtlValidator::normalize(0), 1);
+        assert_eq!(TtlValidator::normalize(u64::MAX), 2_592_000);
+    }
+
+    #[test]
+    fn metrics_dto() {
+        use application::dto::CacheMetricsDto;
+
+        let dto = CacheMetricsDto {
+            l1_hits: 80,
+            l2_hits: 10,
+            misses: 10,
+            promotions: 10,
+            evictions: 5,
+            expirations: 2,
+        };
+
+        assert_eq!(dto.total_hits(), 90);
+        assert_eq!(dto.total_requests(), 100);
+        assert!((dto.hit_rate_percent() - 90.0).abs() < 0.01);
     }
 }
