@@ -14,7 +14,7 @@ readme = "README.md"
 phenotype-port-interfaces = { path = "../phenotype-port-interfaces", version = "0.1.0" }
 
 # Async
-async-trait = { version = "0.1", features = ["async-trait"] }
+async-trait = "0.1"
 tokio = { version = "1", features = ["full"] }
 
 # Serialization
