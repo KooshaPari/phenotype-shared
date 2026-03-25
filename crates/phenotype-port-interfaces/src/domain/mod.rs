@@ -18,4 +18,4 @@ pub use aggregate::*;
 
 // Re-export commonly used aliases
 pub use aggregate::Aggregate as AggregateRoot;
-pub use identifier::UuidIdentifier;
+pub use identifier::{Identifier, StringId, U64Id, UuidIdentifier};

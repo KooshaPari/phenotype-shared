@@ -4,7 +4,7 @@
 
 use crate::domain::entity::Entity;
 use crate::domain::identifier::Identifier;
-use crate::error::{PortError, Result};
+use crate::error::Result;
 use std::fmt::Debug;
 
 /// Marker trait for entities that can be stored in a repository.

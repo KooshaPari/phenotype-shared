@@ -3,10 +3,7 @@
 //! Aggregates are clusters of related entities and value objects
 //! that are treated as a single unit for data changes.
 
-use super::entity::Entity;
 use super::event::DomainEvent;
-use chrono::{DateTime, Utc};
-use std::fmt::Debug;
 
 /// Marker trait for aggregates.
 ///

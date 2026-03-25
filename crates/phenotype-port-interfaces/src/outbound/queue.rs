@@ -3,7 +3,7 @@
 //! Queue ports define message queue operations.
 
 use crate::domain::event::EventEnvelope;
-use crate::error::{PortError, Result};
+use crate::error::Result;
 use serde::{Deserialize, Serialize};
 
 /// Message envelope for queue operations.

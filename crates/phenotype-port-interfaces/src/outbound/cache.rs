@@ -2,7 +2,7 @@
 //!
 //! Cache ports define caching capabilities.
 
-use crate::error::{PortError, Result};
+use crate::error::Result;
 use std::time::Duration;
 
 /// Cache port for key-value caching operations.
