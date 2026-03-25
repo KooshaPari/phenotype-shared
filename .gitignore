@@ -3,3 +3,8 @@ Cargo.lock
 *.swp
 *.swo
 .DS_Store
+
+# VitePress
+docs/.vitepress/cache
+docs/.vitepress/dist
+node_modules
