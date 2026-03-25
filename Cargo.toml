@@ -1,7 +1,10 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/phenotype-event-sourcing",
+    "crates/phenotype-cache-adapter",
     "crates/phenotype-policy-engine",
+    "crates/phenotype-state-machine",
 ]
 
 [workspace.package]
