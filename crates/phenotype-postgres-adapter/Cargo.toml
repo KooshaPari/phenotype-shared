@@ -1,0 +1,30 @@
+[package]
+name = "phenotype-postgres-adapter"
+version = "0.1.0"
+edition = "2021"
+description = "PostgreSQL adapter for phenotype-port-interfaces Repository port"
+license = "MIT"
+authors = ["Phenotype Team"]
+readme = "README.md"
+
+[dependencies]
+# Core ports
+phenotype-port-interfaces = { path = "../phenotype-port-interfaces" }
+
+# Async
+async-trait = "0.1"
+tokio = { version = "1", features = ["full"] }
+
+# Database
+tokio-postgres = "0.7"
+deadpool-postgres = "0.14"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Error handling
+thiserror = "1"
+
+[dev-dependencies]
+tokio-test = "0.4"
