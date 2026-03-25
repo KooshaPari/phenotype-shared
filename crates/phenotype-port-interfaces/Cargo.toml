@@ -1,0 +1,21 @@
+[package]
+name = "phenotype-port-interfaces"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Shared port interfaces for Hexagonal Architecture across Phenotype ecosystem"
+documentation = "https://docs.phenotype.dev/phenotype-port-interfaces"
+repository.workspace = true
+keywords = ["ports", "hexagonal", "architecture", "interfaces"]
+categories = ["architecture", "development-design"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+async-trait = "0.1"
+
+[dev-dependencies]
+tokio = { version = "1.40", features = ["full"] }

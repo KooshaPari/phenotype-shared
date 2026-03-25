@@ -5,6 +5,7 @@ members = [
     "crates/phenotype-cache-adapter",
     "crates/phenotype-policy-engine",
     "crates/phenotype-state-machine",
+    "crates/phenotype-port-interfaces",
 ]
 
 [workspace.package]
