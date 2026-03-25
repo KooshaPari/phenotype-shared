@@ -1,0 +1,10 @@
+[package]
+name = "phenotype-domain"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Core domain model for Phenotype - DDD, Hexagonal, Clean Architecture"
+
+[dependencies]
+
+[dev-dependencies]

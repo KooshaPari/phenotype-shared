@@ -16,6 +16,5 @@ pub use value_object::*;
 pub use event::*;
 pub use aggregate::*;
 
-// Re-export commonly used aliases
-pub use aggregate::Aggregate as AggregateRoot;
-pub use identifier::UuidIdentifier;
+// Re-export commonly used identifiers
+pub use identifier::{Identifier, StringId, U64Id, UuidIdentifier};
