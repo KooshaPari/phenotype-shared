@@ -11,6 +11,7 @@
 
 use super::super::entities::EventEnvelope;
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 /// Command to append a new event.
 pub struct AppendEventCommand<T: serde::Serialize + for<'de> serde::Deserialize<'de>> {

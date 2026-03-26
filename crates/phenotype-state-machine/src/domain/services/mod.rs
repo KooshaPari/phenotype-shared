@@ -4,19 +4,24 @@
 
 use super::entities::*;
 use std::fmt::Debug;
+use std::marker::PhantomData;
 
 /// Service for validating state transitions.
 pub struct TransitionValidator<S: State> {
     config: StateMachineConfig,
+    _phantom: PhantomData<S>,
 }
 
 impl<S: State> TransitionValidator<S> {
     pub fn new(config: StateMachineConfig) -> Self {
-        Self { config }
+        Self {
+            config,
+            _phantom: PhantomData,
+        }
     }
 
     /// Validate if a transition is possible without performing it.
-    pub fn validate(&self, current: &S, target: &S) -> Result<ValidationResult, StateMachineError> {
+    pub fn validate(&self, current: &S, target: &S) -> Result<ValidationResult<S>, StateMachineError> {
         // Check forward-only rule
         if target.ordinal() <= current.ordinal() {
             return Err(StateMachineError::InvalidTransition {
@@ -49,8 +54,9 @@ impl<S: State> TransitionValidator<S> {
 
         Ok(ValidationResult {
             allowed: true,
-            skipped,
             will_skip: !skipped.is_empty(),
+            skipped,
+            _phantom: PhantomData,
         })
     }
 
@@ -66,10 +72,11 @@ impl<S: State> TransitionValidator<S> {
 
 /// Result of a validation check.
 #[derive(Debug, Clone)]
-pub struct ValidationResult {
+pub struct ValidationResult<S: State> {
     pub allowed: bool,
-    pub skipped: Vec<S>,
     pub will_skip: bool,
+    pub skipped: Vec<S>,
+    _phantom: PhantomData<S>,
 }
 
 /// Guard that always allows transitions.
@@ -106,7 +113,7 @@ impl<S: State> AllowStatesGuard<S> {
     }
 }
 
-impl<S: State + PartialEq> TransitionGuard<S> for AllowStatesGuard<S> {
+impl<S: State + PartialEq + Send + Sync> TransitionGuard<S> for AllowStatesGuard<S> {
     fn check(&self, _from: &S, to: &S) -> Result<(), String> {
         if self.allowed_targets.contains(to) {
             Ok(())

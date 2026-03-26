@@ -2,9 +2,9 @@
 //!
 //! Queue ports define message queue operations.
 
-use crate::domain::event::EventEnvelope;
-use crate::error::{PortError, Result};
+use crate::error::Result;
 use serde::{Deserialize, Serialize};
+use async_trait::async_trait;
 
 /// Message envelope for queue operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -56,10 +56,10 @@ impl<T> Message<T> {
 }
 
 /// Queue port for message queue operations.
-#[async_trait::async_trait]
+#[async_trait]
 pub trait Queue: Send + Sync {
     /// The message type.
-    type Message;
+    type Message: Send;
 
     /// Enqueue a message.
     async fn enqueue(&self, message: Self::Message) -> Result<()>;
@@ -75,15 +75,15 @@ pub trait Queue: Send + Sync {
 }
 
 /// Event queue port for event sourcing.
-#[async_trait::async_trait]
+#[async_trait]
 pub trait EventQueue<E: Clone + Send + Sync + serde::Serialize>: Send + Sync {
     /// Publish an event.
-    async fn publish(&self, topic: &str, event: &EventEnvelope<E>) -> Result<()>;
+    async fn publish(&self, topic: &str, event: &crate::domain::event::EventEnvelope<E>) -> Result<()>;
 
     /// Subscribe to events on a topic.
     async fn subscribe(
         &self,
         topic: &str,
-        handler: Box<dyn FnMut(EventEnvelope<E>) -> Result<()> + Send>,
+        handler: Box<dyn FnMut(crate::domain::event::EventEnvelope<E>) -> Result<()> + Send>,
     ) -> Result<()>;
 }

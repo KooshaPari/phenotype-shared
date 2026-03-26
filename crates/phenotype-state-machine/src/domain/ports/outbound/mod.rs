@@ -51,7 +51,7 @@ pub enum RepositoryError {
 }
 
 /// Port for persisting state machines.
-pub trait StateMachineRepository<S: super::entities::State>: Send + Sync {
+pub trait StateMachineRepository<S: crate::domain::entities::State>: Send + Sync {
     /// Save a state machine.
     fn save(&self, id: &str, sm: &StateMachine<S>) -> Result<(), RepositoryError>;
 

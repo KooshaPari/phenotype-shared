@@ -19,9 +19,9 @@ impl Priority {
     /// Priority 4: Background/Lowest.
     pub const BACKGROUND: Priority = Priority(4);
 
-    /// Creates a new priority from a u8 value.
-    pub fn new(value: u8) -> Self {
-        Self(value.min(255))
+    /// Creates a new priority from a numeric value (clamped to `u8::MAX`).
+    pub fn new(value: u32) -> Self {
+        Self(value.min(u8::MAX as u32) as u8)
     }
 
     /// Returns the raw priority value.
@@ -65,7 +65,7 @@ impl From<Priority> for u8 {
 
 impl From<u8> for Priority {
     fn from(v: u8) -> Self {
-        Self::new(v)
+        Self(v)
     }
 }
 

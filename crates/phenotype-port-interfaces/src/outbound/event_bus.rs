@@ -5,12 +5,13 @@
 use crate::domain::event::DomainEvent;
 use crate::error::Result;
 use std::fmt::Debug;
+use async_trait::async_trait;
 
 /// Event handler function type.
 pub type EventHandler<E> = Box<dyn Fn(E) -> Result<()> + Send + Sync>;
 
 /// Event bus port for pub/sub operations.
-#[async_trait::async_trait]
+#[async_trait]
 pub trait EventBus: Send + Sync {
     /// The event type.
     type Event: DomainEvent + Debug + Clone;
@@ -26,6 +27,7 @@ pub trait EventBus: Send + Sync {
 }
 
 /// Extension trait for EventBus with additional helpers.
+#[async_trait]
 pub trait EventBusExt: EventBus {
     /// Publish multiple events to a topic.
     async fn publish_all(&self, topic: &str, events: &[Self::Event]) -> Result<()> {

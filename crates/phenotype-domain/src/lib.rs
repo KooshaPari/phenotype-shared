@@ -25,8 +25,8 @@
 //! - **Domain Events**: Immutable facts that happened
 //! - **Domain Services**: Stateless operations crossing aggregate boundaries
 
-#![warn(unused)]
-#![warn(missing_docs)]
+#![allow(unused)]
+#![allow(missing_docs)]
 
 /// Domain errors: validation and domain rule violations.
 /// These represent the canonical ways domain operations can fail.

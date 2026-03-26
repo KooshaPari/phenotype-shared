@@ -52,7 +52,7 @@ use parking_lot::RwLock;
 use std::hash::Hash;
 use std::num::NonZeroUsize;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 /// Cache metrics for observability.
 /// Backward-compatible alias for `CacheMetricsDto`.
@@ -198,7 +198,7 @@ where
 
     /// Insert a value with a custom TTL.
     pub fn insert_with_ttl(&self, key: K, value: V, ttl: Duration) {
-        let entry = CacheEntry::new(value, ttl.as_secs());
+        let entry = CacheEntry::new(value, ttl);
         {
             let mut l1 = self.l1.write();
             l1.put(key.clone(), entry.clone());

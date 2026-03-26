@@ -4,9 +4,10 @@
 
 use crate::error::Result;
 use std::path::Path;
+use async_trait::async_trait;
 
 /// File system port for file operations.
-#[async_trait::async_trait]
+#[async_trait]
 pub trait FileSystem: Send + Sync {
     /// Read file contents.
     async fn read(&self, path: &Path) -> Result<Vec<u8>>;
@@ -28,6 +29,7 @@ pub trait FileSystem: Send + Sync {
 }
 
 /// Extension trait for filesystem with convenience methods.
+#[async_trait]
 pub trait FileSystemExt: FileSystem {
     /// Read file as string.
     async fn read_to_string(&self, path: &Path) -> Result<String> {
@@ -41,13 +43,13 @@ pub trait FileSystemExt: FileSystem {
     }
 
     /// Read JSON file.
-    async fn read_json<T: serde::de::DeserializeOwned>(&self, path: &Path) -> Result<T> {
+    async fn read_json<T: serde::de::DeserializeOwned + Send>(&self, path: &Path) -> Result<T> {
         let contents = self.read_to_string(path).await?;
         Ok(serde_json::from_str(&contents)?)
     }
 
     /// Write JSON file.
-    async fn write_json<T: serde::Serialize>(&self, path: &Path, value: &T) -> Result<()> {
+    async fn write_json<T: serde::Serialize + Sync>(&self, path: &Path, value: &T) -> Result<()> {
         let contents = serde_json::to_string_pretty(value)?;
         self.write_string(path, &contents).await
     }

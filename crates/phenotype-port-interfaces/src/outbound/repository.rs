@@ -4,17 +4,18 @@
 
 use crate::domain::entity::Entity;
 use crate::domain::identifier::Identifier;
-use crate::error::{PortError, Result};
+use crate::error::Result;
 use std::fmt::Debug;
+use async_trait::async_trait;
 
 /// Marker trait for entities that can be stored in a repository.
 pub trait StorableEntity: Entity + Debug + Clone + Send + Sync {
     /// The type of the entity.
-    type Entity: StorableEntity<Id = Self::Id>;
+    type Id: Identifier;
 }
 
 /// Repository port for CRUD operations on entities.
-#[async_trait::async_trait]
+#[async_trait]
 pub trait Repository: Send + Sync {
     /// The entity type this repository manages.
     type Entity: StorableEntity;
@@ -39,12 +40,13 @@ pub trait Repository: Send + Sync {
 }
 
 /// Extension trait for repositories with common operations.
+#[async_trait]
 pub trait RepositoryExt: Repository {
     /// Find or create an entity.
     async fn find_or_create<F>(&self, id: &Self::Id, factory: F) -> Result<Self::Entity>
     where
-        F: FnOnce() -> Self::Entity,
-        Self::Entity: Default,
+        F: FnOnce() -> Self::Entity + Send,
+        Self::Entity: Default + Send,
     {
         Ok(self
             .find_by_id(id)

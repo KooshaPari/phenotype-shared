@@ -3,8 +3,7 @@
 //! These define what operations are available on the cache from
 //! the perspective of the application layer or external clients.
 
-use crate::domain::entities::CacheEntry;
-use crate::domain::dto::CacheMetricsDto;
+use crate::application::dto::CacheMetricsDto;
 
 /// Cache service interface - the primary port for cache operations.
 /// This is the main interface that clients (application layer, adapters) use.

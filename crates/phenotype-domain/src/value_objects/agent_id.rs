@@ -1,16 +1,19 @@
 //! # Agent ID
 //!
-//! Unique identifier for an agent using ULID-like format.
+//! Unique identifier for an agent using a fixed-width lowercase hex encoding.
 
 use crate::errors::ValidationError;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 /// Unique identifier for an agent.
-/// Uses ULID-like format: time(48bits) + random(80bits) = 128bit sortable ID.
+/// 26 lowercase hex characters (104 bits), sortable-ish via time-mixed entropy.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AgentId(String);
 
+static AGENT_ID_SEQ: AtomicU64 = AtomicU64::new(0);
+
 impl AgentId {
-    /// Creates a new random AgentId based on current timestamp.
+    /// Creates a new unique AgentId (lowercase hex, 26 characters).
     pub fn new() -> Self {
         let ts = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -31,7 +34,7 @@ impl AgentId {
         if s.len() > 32 {
             return Err(ValidationError::new("AgentId", "exceeds 32 characters"));
         }
-        if !s.chars().all(|c| c.is_ascii_hexdigit() || c == '-') {
+        if !s.chars().all(|c| c.is_ascii_hexdigit()) {
             return Err(ValidationError::new("AgentId", "must be hexadecimal"));
         }
         Ok(Self(s.to_string()))
@@ -42,7 +45,7 @@ impl AgentId {
         &self.0
     }
 
-    /// Returns true if the ID follows ULID-like format (26 chars hex).
+    /// Returns true if the ID is the canonical 26-character lowercase hex form.
     pub fn is_ulid_format(&self) -> bool {
         self.0.len() == 26 && self.0.chars().all(|c| c.is_ascii_hexdigit())
     }
