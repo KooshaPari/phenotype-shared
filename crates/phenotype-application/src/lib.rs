@@ -111,8 +111,8 @@ impl From<phenotype_domain::DomainError> for ApplicationError {
     }
 }
 
-impl From<phenotype_port_interfaces::outbound::RepositoryError> for ApplicationError {
-    fn from(e: phenotype_port_interfaces::outbound::RepositoryError) -> Self {
+impl From<phenotype_port_interfaces::error::PortError> for ApplicationError {
+    fn from(e: phenotype_port_interfaces::error::PortError) -> Self {
         ApplicationError::InfrastructureError(e.to_string())
     }
 }
