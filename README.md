@@ -1,15 +1,21 @@
-# phenotype-infrakit
+# phenotype-shared
 
-Rust infrastructure toolkit extracted from the Phenotype ecosystem. Generic, domain-agnostic crates for event sourcing, caching, policy evaluation, and state machine management.
+Rust infrastructure toolkit extracted from the Phenotype ecosystem. The workspace now provides shared domain, application, port, and infrastructure crates that support hexagonal and clean architecture across the broader polyrepo.
 
 ## Crates
 
-| Crate | Description | Tests |
-|-------|-------------|-------|
-| [`phenotype-event-sourcing`](crates/phenotype-event-sourcing) | Append-only event store with SHA-256 hash chain verification, snapshot management, and pluggable storage backends | 15 |
-| [`phenotype-cache-adapter`](crates/phenotype-cache-adapter) | Two-tier cache (L1 LRU + L2 DashMap) with TTL expiration and pluggable `MetricsHook` for observability | 7 |
-| [`phenotype-policy-engine`](crates/phenotype-policy-engine) | Rule-based policy evaluation engine with allow/deny/require rules, TOML config loading, and severity levels | 43 |
-| [`phenotype-state-machine`](crates/phenotype-state-machine) | Generic finite state machine with transition guards, forward-only enforcement, skip-state config, and history tracking | 11 |
+| Crate | Description |
+|-------|-------------|
+| [`phenotype-domain`](crates/phenotype-domain) | DDD value objects, entities, aggregates, events, and domain errors |
+| [`phenotype-application`](crates/phenotype-application) | CQRS commands, queries, DTOs, and application handlers |
+| [`phenotype-port-interfaces`](crates/phenotype-port-interfaces) | Hexagonal inbound/outbound port traits and shared contracts |
+| [`phenotype-event-sourcing`](crates/phenotype-event-sourcing) | Append-only event store with hash-chain verification and snapshot management |
+| [`phenotype-cache-adapter`](crates/phenotype-cache-adapter) | Two-tier cache with TTL expiration and observability hooks |
+| [`phenotype-policy-engine`](crates/phenotype-policy-engine) | Rule-based policy evaluation engine with TOML config loading |
+| [`phenotype-state-machine`](crates/phenotype-state-machine) | Generic finite state machine with transition guards and history tracking |
+| [`phenotype-postgres-adapter`](crates/phenotype-postgres-adapter) | PostgreSQL persistence adapter |
+| [`phenotype-redis-adapter`](crates/phenotype-redis-adapter) | Redis persistence / cache adapter |
+| [`phenotype-http-adapter`](crates/phenotype-http-adapter) | HTTP adapter and transport utilities |
 
 ## Quick Start
 
@@ -17,10 +23,16 @@ Add any crate as a git dependency:
 
 ```toml
 [dependencies]
-phenotype-event-sourcing = { git = "https://github.com/KooshaPari/phenotype-infrakit" }
-phenotype-cache-adapter = { git = "https://github.com/KooshaPari/phenotype-infrakit" }
-phenotype-policy-engine = { git = "https://github.com/KooshaPari/phenotype-infrakit" }
-phenotype-state-machine = { git = "https://github.com/KooshaPari/phenotype-infrakit" }
+phenotype-domain = { git = "https://github.com/KooshaPari/phenotype-shared" }
+phenotype-application = { git = "https://github.com/KooshaPari/phenotype-shared" }
+phenotype-port-interfaces = { git = "https://github.com/KooshaPari/phenotype-shared" }
+phenotype-event-sourcing = { git = "https://github.com/KooshaPari/phenotype-shared" }
+phenotype-cache-adapter = { git = "https://github.com/KooshaPari/phenotype-shared" }
+phenotype-policy-engine = { git = "https://github.com/KooshaPari/phenotype-shared" }
+phenotype-state-machine = { git = "https://github.com/KooshaPari/phenotype-shared" }
+phenotype-postgres-adapter = { git = "https://github.com/KooshaPari/phenotype-shared" }
+phenotype-redis-adapter = { git = "https://github.com/KooshaPari/phenotype-shared" }
+phenotype-http-adapter = { git = "https://github.com/KooshaPari/phenotype-shared" }
 ```
 
 ## Usage Examples
@@ -95,25 +107,70 @@ assert_eq!(sm.current(), &Status::Review);
 ## Development
 
 ```bash
-cargo test --workspace      # Run all 76 tests
-cargo clippy --workspace    # Lint
-cargo fmt --check           # Format check
+cargo fmt --check
+cargo clippy --workspace -- -D warnings
+cargo test --workspace
 ```
 
 ## Architecture
 
-Each crate is fully independent with no inter-crate dependencies. They share workspace-level dependency versions for consistency but can be consumed individually.
+The workspace is organized as a layered hexagonal stack:
+
+- **Domain**: `phenotype-domain` owns value objects, entities, aggregates, events, and domain errors.
+- **Application**: `phenotype-application` coordinates commands, queries, DTOs, and handlers.
+- **Ports**: `phenotype-port-interfaces` holds technology-agnostic inbound and outbound contracts.
+- **Infrastructure**: event sourcing, cache, policy, state machine, database, Redis, and HTTP adapters live below the core layers.
 
 ```
-phenotype-infrakit/
-  Cargo.toml              # Workspace root
+phenotype-shared/
+  Cargo.toml
   crates/
-    phenotype-event-sourcing/   # EventStore trait + InMemoryEventStore + hash chains
-    phenotype-cache-adapter/    # TieredCache<K,V> with L1/L2 + TTL + MetricsHook
-    phenotype-policy-engine/    # PolicyEngine + Rule + TOML loader + Context
-    phenotype-state-machine/    # StateMachine<S> + TransitionGuard + history
+    phenotype-domain/
+    phenotype-application/
+    phenotype-port-interfaces/
+    phenotype-event-sourcing/
+    phenotype-cache-adapter/
+    phenotype-policy-engine/
+    phenotype-state-machine/
+    phenotype-postgres-adapter/
+    phenotype-redis-adapter/
+    phenotype-http-adapter/
 ```
 
-## License
+## Consolidation opportunities
+
+### Governance baseline PR scope
+
+The initial governance PR for `phenotype-shared` should stay intentionally small and canonical:
+
+- add a repo-level quality gate workflow that runs format, lint, build, and tests
+- add an ADR stub for governance, branch protection, and canonical repo policy
+- add lightweight policy-gate checks for top-level repo layout and required governance files
+- add architecture lint placeholders for boundary and dependency drift
+- keep repo-specific behavior local; only extract cross-cutting rules into shared code
+
+### Ports and shared contracts
+
+- `phenotype-shared/crates/phenotype-port-interfaces` is the canonical home for domain-agnostic traits and value objects.
+- Repo-local port layers such as `phench/src/phench/application/ports.py` and `worktree-manager/src/worktree_manager/ports/mod.rs` should keep their names and responsibilities aligned with the shared port vocabulary.
+- Prefer extracting only truly generic contracts into the shared ports crate; keep workflow- or repo-specific ports local.
+
+### Extraction priorities
+
+- **First**: pagination primitives and response wrappers shared across application/query boundaries.
+- **Next**: error mapping helpers, keeping domain-specific errors local.
+- **Then**: reusable infrastructure primitives that already repeat across repos.
+
+### Repo structure and worktree placement
+
+- Keep canonical top-level buckets explicit: `apps/`, `libs/`, `infrastructure/`, `governance/`, `tooling/`, `templates/`.
+- Keep active worktrees under `repos/worktrees/<project>/<category>/<wtree>` so canonical repo roots stay clean.
+- Prefer shallow, discoverable top-level directories over deeply nested ad hoc layouts.
+
+### Errors and failure taxonomy
+
+- Keep domain-specific exceptions local to each crate or package, such as `phench/src/phench/domain/exceptions.py` and `worktree-manager/src/worktree_manager/domain/errors.rs`.
+- Extract only cross-cutting, technology-neutral error categories into shared layers, such as validation/storage/not-found/permission state errors.
+- Avoid creating parallel generic error enums in multiple repositories unless they serve different bounded contexts.
 
 MIT
