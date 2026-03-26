@@ -2,11 +2,12 @@
 //!
 //! Cache ports define caching capabilities.
 
-use crate::error::{PortError, Result};
+use crate::error::Result;
 use std::time::Duration;
+use async_trait::async_trait;
 
 /// Cache port for key-value caching operations.
-#[async_trait::async_trait]
+#[async_trait]
 pub trait Cache: Send + Sync {
     /// The key type.
     type Key: AsRef<str> + Send + Sync;
@@ -30,12 +31,13 @@ pub trait Cache: Send + Sync {
 }
 
 /// Extension trait for cache with convenience methods.
+#[async_trait]
 pub trait CacheExt: Cache {
     /// Get a value or compute and cache it.
     async fn get_or_compute<F, Fut>(&self, key: &Self::Key, factory: F) -> Result<Self::Value>
     where
-        F: FnOnce() -> Fut,
-        Fut: std::future::Future<Output = Result<Self::Value>>,
+        F: FnOnce() -> Fut + Send,
+        Fut: std::future::Future<Output = Result<Self::Value>> + Send,
     {
         if let Some(value) = self.get(key).await? {
             return Ok(value);
@@ -49,8 +51,8 @@ pub trait CacheExt: Cache {
     /// Get with TTL.
     async fn get_ttl(&self, key: &Self::Key, ttl: Duration) -> Result<Option<Self::Value>> {
         let value = self.get(key).await?;
-        if value.is_some() {
-            self.set(key, value.as_ref().unwrap(), Some(ttl)).await?;
+        if let Some(ref v) = value {
+            self.set(key, v, Some(ttl)).await?;
         }
         Ok(value)
     }

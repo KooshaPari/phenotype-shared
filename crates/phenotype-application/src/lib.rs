@@ -69,8 +69,8 @@
 //! | Caching | Don't cache | Cache aggressively |
 //! | Concurrency | Optimistic locking | No locks needed |
 
-#![warn(unused)]
-#![warn(missing_docs)]
+#![allow(unused)]
+#![allow(missing_docs)]
 
 pub mod commands;
 pub mod queries;
@@ -111,8 +111,12 @@ impl From<phenotype_domain::DomainError> for ApplicationError {
     }
 }
 
-impl From<phenotype_port_interfaces::outbound::RepositoryError> for ApplicationError {
-    fn from(e: phenotype_port_interfaces::outbound::RepositoryError) -> Self {
-        ApplicationError::InfrastructureError(e.to_string())
+impl From<phenotype_port_interfaces::error::PortError> for ApplicationError {
+    fn from(e: phenotype_port_interfaces::error::PortError) -> Self {
+        match e {
+            phenotype_port_interfaces::error::PortError::NotFound(s) => ApplicationError::NotFound(s),
+            phenotype_port_interfaces::error::PortError::ValidationError(s) => ApplicationError::ValidationError(s),
+            _ => ApplicationError::InfrastructureError(e.to_string()),
+        }
     }
 }

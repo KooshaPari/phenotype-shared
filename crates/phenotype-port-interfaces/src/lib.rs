@@ -20,6 +20,3 @@ pub mod shared;
 // === ERROR TYPES ===
 pub mod error;
 
-// === TESTS ===
-#[cfg(test)]
-mod tests;

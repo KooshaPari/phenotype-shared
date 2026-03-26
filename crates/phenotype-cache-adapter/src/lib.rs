@@ -52,7 +52,7 @@ use parking_lot::RwLock;
 use std::hash::Hash;
 use std::num::NonZeroUsize;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 /// Cache metrics for observability.
 /// Backward-compatible alias for `CacheMetricsDto`.
@@ -103,7 +103,7 @@ where
     K: Hash + Eq + Clone + Send + Sync + 'static,
     V: Clone + Send + Sync + 'static,
 {
-    l1: Arc<RwLock<LruCache<DomainCacheEntry<V>, CacheEntry<V>>>>,
+    l1: Arc<RwLock<LruCache<K, DomainCacheEntry<V>>>>,
     l2: Arc<DashMap<K, DomainCacheEntry<V>>>,
     default_ttl: Duration,
     metrics: Arc<RwLock<CacheMetrics>>,
@@ -198,7 +198,7 @@ where
 
     /// Insert a value with a custom TTL.
     pub fn insert_with_ttl(&self, key: K, value: V, ttl: Duration) {
-        let entry = CacheEntry::new(value, ttl.as_secs());
+        let entry = CacheEntry::new(value, ttl);
         {
             let mut l1 = self.l1.write();
             l1.put(key.clone(), entry.clone());
@@ -254,11 +254,9 @@ where
 // Re-export the domain CacheEntry for use in the legacy API
 pub use domain::entities::CacheEntry as DomainCacheEntry;
 
-// Implement MetricsHook for domain MetricsCollector
-impl<T: MetricsCollector + 'static> From<T> for Arc<dyn MetricsHook> {
-    fn from(collector: T) -> Self {
-        Arc::new(CollectorAdapter(collector))
-    }
+/// Wrap a domain [`MetricsCollector`] as a legacy [`MetricsHook`].
+pub fn metrics_collector_as_hook<T: MetricsCollector + 'static>(collector: T) -> Arc<dyn MetricsHook> {
+    Arc::new(CollectorAdapter(collector))
 }
 
 struct CollectorAdapter<T>(T);

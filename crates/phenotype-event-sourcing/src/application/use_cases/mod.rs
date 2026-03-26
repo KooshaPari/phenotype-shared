@@ -12,6 +12,9 @@ pub enum UseCaseError {
     #[error("Repository error: {0}")]
     Repository(#[from] RepositoryError),
 
+    #[error("Serialization error: {0}")]
+    Serialization(#[from] serde_json::Error),
+
     #[error("Invalid event: {0}")]
     InvalidEvent(String),
 
@@ -46,7 +49,7 @@ impl<R: EventRepository> AppendEventUseCase<R> {
             event.prev_hash = "0".repeat(64);
         } else {
             // Get the previous event to get its hash
-            let events = self.repository.get_events(aggregate_type, aggregate_id)?;
+            let events: Vec<EventEnvelope<T>> = self.repository.get_events(aggregate_type, aggregate_id)?;
             if let Some(last_event) = events.last() {
                 event.prev_hash = last_event.hash.clone();
             }

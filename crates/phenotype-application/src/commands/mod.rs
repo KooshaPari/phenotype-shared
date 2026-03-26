@@ -41,7 +41,6 @@ pub trait Command: Send + Sync {
 
 /// Command to create a new agent.
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
-#[validate(nested)]
 pub struct CreateAgent {
     /// Human-readable name for the agent.
     pub name: String,
@@ -111,7 +110,6 @@ impl Command for DeleteAgent {
 
 /// Command to create a new task.
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
-#[validate(nested)]
 pub struct CreateTask {
     /// Human-readable task name.
     #[validate(length(min = 1, max = 255))]
@@ -200,7 +198,6 @@ impl Command for CancelTask {
 
 /// Command to start a workflow.
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
-#[validate(nested)]
 pub struct StartWorkflow {
     /// Workflow name.
     #[validate(length(min = 1))]

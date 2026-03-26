@@ -2,7 +2,7 @@
 //!
 //! Use cases orchestrate the domain logic and coordinate between ports.
 
-use crate::domain::entities::{StateMachine, StateMachineError, State, TransitionRecord};
+use crate::domain::entities::{StateMachine as DomainStateMachine, StateMachineError, State, TransitionRecord};
 use crate::domain::ports::outbound::{StateMachineRepository, RepositoryError};
 use crate::application::dto::{StateMachineDto, TransitionRecordDto};
 
@@ -22,18 +22,24 @@ pub enum UseCaseError {
     InvalidState(String),
 }
 
+use std::marker::PhantomData;
+
 /// Use case for creating a new state machine.
 pub struct CreateStateMachineUseCase<S: State, R: StateMachineRepository<S>> {
     repository: R,
+    _state: PhantomData<S>,
 }
 
 impl<S: State, R: StateMachineRepository<S>> CreateStateMachineUseCase<S, R> {
     pub fn new(repository: R) -> Self {
-        Self { repository }
+        Self {
+            repository,
+            _state: PhantomData,
+        }
     }
 
-    pub fn execute(&self, id: &str, initial_state: S) -> Result<StateMachine<S>, UseCaseError> {
-        let sm = StateMachine::new(initial_state);
+    pub fn execute(&self, id: &str, initial_state: S) -> Result<DomainStateMachine<S>, UseCaseError> {
+        let sm = DomainStateMachine::new(initial_state);
         self.repository.save(id, &sm)?;
         Ok(sm)
     }
@@ -42,18 +48,22 @@ impl<S: State, R: StateMachineRepository<S>> CreateStateMachineUseCase<S, R> {
 /// Use case for transitioning a state machine.
 pub struct TransitionUseCase<S: State, R: StateMachineRepository<S>> {
     repository: R,
+    _state: PhantomData<S>,
 }
 
 impl<S: State, R: StateMachineRepository<S>> TransitionUseCase<S, R> {
     pub fn new(repository: R) -> Self {
-        Self { repository }
+        Self {
+            repository,
+            _state: PhantomData,
+        }
     }
 
     pub fn execute(&self, id: &str, target_state: S) -> Result<TransitionRecord<S>, UseCaseError> {
         let mut sm = self.repository.find_by_id(id)?
             .ok_or_else(|| UseCaseError::NotFound(id.to_string()))?;
 
-        let record = sm.transition(target_state)?;
+        let record = sm.transition(target_state)?.clone();
         self.repository.save(id, &sm)?;
 
         Ok(record)
@@ -63,11 +73,15 @@ impl<S: State, R: StateMachineRepository<S>> TransitionUseCase<S, R> {
 /// Use case for getting state machine status.
 pub struct GetStateMachineUseCase<S: State, R: StateMachineRepository<S>> {
     repository: R,
+    _state: PhantomData<S>,
 }
 
 impl<S: State + std::fmt::Display, R: StateMachineRepository<S>> GetStateMachineUseCase<S, R> {
     pub fn new(repository: R) -> Self {
-        Self { repository }
+        Self {
+            repository,
+            _state: PhantomData,
+        }
     }
 
     pub fn execute(&self, id: &str) -> Result<Option<StateMachineDto>, UseCaseError> {

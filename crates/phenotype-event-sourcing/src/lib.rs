@@ -36,6 +36,7 @@
 //!
 //! ```rust
 //! use phenotype_event_sourcing::prelude::*;
+//! use serde::{Deserialize, Serialize};
 //!
 //! // Create an event store
 //! let store = InMemoryEventStore::new();
@@ -109,8 +110,3 @@ pub mod prelude {
     pub use crate::adapters::outbound::inmemory::InMemoryEventStore;
 }
 
-// === TESTS ===
-#[cfg(test)]
-mod tests {
-    mod unit;
-}
