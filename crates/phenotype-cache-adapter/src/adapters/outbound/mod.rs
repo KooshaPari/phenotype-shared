@@ -7,8 +7,5 @@
 pub mod memory;
 pub mod metrics;
 
-use memory::in_memory::InMemoryEntryStore;
-use metrics::default::DefaultMetricsCollector;
-
-pub use memory::in_memory::InMemoryTier;
-pub use metrics::default::NoopMetricsCollector;
+pub use memory::in_memory::{InMemoryEntryStore, InMemoryTier};
+pub use metrics::default::{AtomicMetricsCollector, NoopMetricsCollector};

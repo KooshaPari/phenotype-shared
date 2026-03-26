@@ -14,10 +14,10 @@ pub struct CacheEntry<V> {
 
 impl<V> CacheEntry<V> {
     /// Create a new cache entry with TTL.
-    pub fn new(value: V, ttl_seconds: u64) -> Self {
+    pub fn new(value: V, ttl: std::time::Duration) -> Self {
         Self {
             value,
-            expires_at: Instant::now() + std::time::Duration::from_secs(ttl_seconds),
+            expires_at: Instant::now() + ttl,
         }
     }
 

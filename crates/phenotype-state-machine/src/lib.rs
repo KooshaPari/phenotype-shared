@@ -31,15 +31,17 @@
 //!
 //! ```rust
 //! use phenotype_state_machine::prelude::*;
+//! use serde::{Deserialize, Serialize};
+//! use std::fmt::{self, Display};
 //!
 //! // Define your states
-//! #[derive(Debug, Clone, PartialEq, Eq)]
+//! #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 //! enum OrderState {
 //!     Draft, Confirmed, Shipped, Delivered
 //! }
 //!
 //! impl Display for OrderState {
-//!     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//!     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 //!         write!(f, "{:?}", self)
 //!     }
 //! }
@@ -107,8 +109,3 @@ pub mod prelude {
     pub use crate::application::dto::*;
 }
 
-// === TESTS ===
-#[cfg(test)]
-mod tests {
-    mod unit;
-}

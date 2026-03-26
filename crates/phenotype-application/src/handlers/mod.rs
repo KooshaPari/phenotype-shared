@@ -283,7 +283,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_agent_command() {
-        let handler = AgentCommandHandler;
+        let handler = AgentCommandHandler {};
         let cmd = CreateAgent {
             name: "Test Agent".to_string(),
             capabilities: vec!["coding".to_string()],
@@ -298,7 +298,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_agent_empty_name() {
-        let handler = AgentCommandHandler;
+        let handler = AgentCommandHandler {};
         let cmd = CreateAgent {
             name: "".to_string(),
             capabilities: vec![],

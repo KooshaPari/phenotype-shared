@@ -11,6 +11,3 @@ pub trait DomainEvent: Serialize + for<'de> Deserialize<'de> + Send + Sync {
     /// The event type name (used for discrimination).
     fn event_type(&self) -> &'static str;
 }
-
-/// Re-export commonly used derive macros.
-pub use serde::{Deserialize, Serialize};

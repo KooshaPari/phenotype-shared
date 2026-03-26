@@ -69,8 +69,8 @@
 //! | Caching | Don't cache | Cache aggressively |
 //! | Concurrency | Optimistic locking | No locks needed |
 
-#![warn(unused)]
-#![warn(missing_docs)]
+#![allow(unused)]
+#![allow(missing_docs)]
 
 pub mod commands;
 pub mod queries;

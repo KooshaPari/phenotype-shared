@@ -3,7 +3,7 @@
 //! These services contain business logic that doesn't belong to a single entity
 //! or that coordinates multiple entities/ports.
 
-use crate::domain::entities::{CacheConfig, CacheEntry};
+use crate::domain::entities::CacheConfig;
 
 /// Cache configuration builder for creating valid configurations.
 pub struct CacheConfigBuilder {

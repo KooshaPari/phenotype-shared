@@ -3,13 +3,14 @@
 //! Use cases encapsulate application-specific business rules
 //! and coordinate between ports.
 
-use crate::domain::entities::CacheConfig;
 use crate::domain::ports::CacheService;
 use crate::application::dto::{CacheMetricsDto, CacheResponse};
 
 /// Use case: Get value from cache.
 pub struct GetFromCache<K, V, S>
 where
+    K: Clone + std::hash::Hash + Eq + Send + Sync,
+    V: Clone + Send + Sync,
     S: CacheService<K, V>,
 {
     cache: S,
@@ -18,9 +19,9 @@ where
 
 impl<K, V, S> GetFromCache<K, V, S>
 where
-    S: CacheService<K, V>,
     K: Clone + std::hash::Hash + Eq + Send + Sync,
     V: Clone + Send + Sync,
+    S: CacheService<K, V>,
 {
     pub fn new(cache: S) -> Self {
         Self {
@@ -42,6 +43,8 @@ where
 /// Use case: Insert value into cache.
 pub struct InsertIntoCache<K, V, S>
 where
+    K: Clone + std::hash::Hash + Eq + Send + Sync,
+    V: Clone + Send + Sync,
     S: CacheService<K, V>,
 {
     cache: S,
@@ -50,9 +53,9 @@ where
 
 impl<K, V, S> InsertIntoCache<K, V, S>
 where
-    S: CacheService<K, V>,
     K: Clone + std::hash::Hash + Eq + Send + Sync,
     V: Clone + Send + Sync,
+    S: CacheService<K, V>,
 {
     pub fn new(cache: S) -> Self {
         Self {
@@ -73,6 +76,8 @@ where
 /// Use case: Remove value from cache.
 pub struct RemoveFromCache<K, V, S>
 where
+    K: Clone + std::hash::Hash + Eq + Send + Sync,
+    V: Clone + Send + Sync,
     S: CacheService<K, V>,
 {
     cache: S,
@@ -81,9 +86,9 @@ where
 
 impl<K, V, S> RemoveFromCache<K, V, S>
 where
-    S: CacheService<K, V>,
     K: Clone + std::hash::Hash + Eq + Send + Sync,
     V: Clone + Send + Sync,
+    S: CacheService<K, V>,
 {
     pub fn new(cache: S) -> Self {
         Self {
@@ -100,6 +105,8 @@ where
 /// Use case: Get cache metrics.
 pub struct GetCacheMetrics<K, V, S>
 where
+    K: Clone + std::hash::Hash + Eq + Send + Sync,
+    V: Clone + Send + Sync,
     S: CacheService<K, V>,
 {
     cache: S,
@@ -108,9 +115,9 @@ where
 
 impl<K, V, S> GetCacheMetrics<K, V, S>
 where
-    S: CacheService<K, V>,
     K: Clone + std::hash::Hash + Eq + Send + Sync,
     V: Clone + Send + Sync,
+    S: CacheService<K, V>,
 {
     pub fn new(cache: S) -> Self {
         Self {

@@ -4,6 +4,7 @@
 
 use crate::error::Result;
 use serde::de::DeserializeOwned;
+use async_trait::async_trait;
 
 /// Configuration port alias for common naming conventions.
 pub trait ConfigProvider: Config {}
@@ -11,10 +12,10 @@ pub trait ConfigProvider: Config {}
 impl<T: Config> ConfigProvider for T {}
 
 /// Extension trait for config with typed accessors.
-#[async_trait::async_trait]
+#[async_trait]
 pub trait Config: Send + Sync {
     /// Get a configuration value by key.
-    async fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>>;
+    async fn get<T: DeserializeOwned + Send>(&self, key: &str) -> Result<Option<T>>;
 
     /// Check if a configuration key exists.
     async fn has(&self, key: &str) -> Result<bool>;
@@ -24,16 +25,17 @@ pub trait Config: Send + Sync {
 }
 
 /// Extension trait for config with typed accessors.
+#[async_trait]
 pub trait ConfigExt: Config {
     /// Get a required configuration value.
-    async fn get_required<T: DeserializeOwned>(&self, key: &str) -> Result<T> {
+    async fn get_required<T: DeserializeOwned + Send>(&self, key: &str) -> Result<T> {
         self.get(key)
             .await?
             .ok_or_else(|| crate::error::PortError::ConfigError(format!("Missing config: {}", key)))
     }
 
     /// Get with a default value.
-    async fn get_or<T: DeserializeOwned + Default>(&self, key: &str) -> Result<T> {
+    async fn get_or<T: DeserializeOwned + Default + Send>(&self, key: &str) -> Result<T> {
         self.get(key).await.map(|opt| opt.unwrap_or_default())
     }
 
