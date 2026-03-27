@@ -6,9 +6,3 @@ ignore = [
     # Add vulnerability IDs to ignore here
     # e.g., "RUSTSEC-0000-0000"
 ]
-
-[exclude]
-# Paths to exclude from auditing
-paths = [
-    # e.g., "tests/fixtures/"
-]
