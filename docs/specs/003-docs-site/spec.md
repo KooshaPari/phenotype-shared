@@ -13,15 +13,18 @@
 VitePress documentation site with comparison matrix for shared libraries.
 
 ## Past Work (Completed)
+
 - VitePress scaffold
 - Comparison matrix
 - Getting started docs
 
 ## Future Work
+
 - API reference
 - Usage examples
 
 ## Verification
+
 - Site builds
 - Docs accessible
 
