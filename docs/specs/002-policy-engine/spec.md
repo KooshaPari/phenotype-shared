@@ -13,15 +13,18 @@
 Policy engine crate for centralized policy management across Phenotype projects.
 
 ## Past Work (Completed)
+
 - Policy engine crate creation
 - Core policy evaluation
 - Integration patterns
 
 ## Future Work
+
 - Policy administration UI
 - Policy versioning
 
 ## Verification
+
 - Policies evaluated correctly
 - Integration works across projects
 
