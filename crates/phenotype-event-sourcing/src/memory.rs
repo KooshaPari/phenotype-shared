@@ -24,6 +24,7 @@ struct StoredEvent {
     hash: String,
     prev_hash: String,
     payload_json: serde_json::Value,
+    #[allow(dead_code)]
     event_type: String,
     actor: String,
     timestamp: DateTime<Utc>,
