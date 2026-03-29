@@ -66,17 +66,14 @@ impl EventStore for InMemoryEventStore {
     fn append<T: Serialize + for<'de> Deserialize<'de>>(
         &self,
         event: &EventEnvelope<T>,
-        event_type: &str,
+        entity_type: &str,
+        entity_id: &str,
     ) -> Result<i64> {
         let mut store = self.events.write().map_err(|_| EventStoreError::StorageError("Lock poisoned".into()))?;
 
-        // For simplicity, use the UUID string as entity_id if needed
-        let entity_id = event.id.to_string();
-        let entity_type = "generic";
-
         // Get or create the entity's event list
         let entity_map = store.entry(entity_type.to_string()).or_insert_with(std::collections::BTreeMap::new);
-        let events = entity_map.entry(entity_id.clone()).or_insert_with(Vec::new);
+        let events = entity_map.entry(entity_id.to_string()).or_insert_with(Vec::new);
 
         // Compute sequence number and hash
         let sequence = if events.is_empty() { 1 } else { events.last().unwrap().sequence + 1 };
@@ -94,7 +91,7 @@ impl EventStore for InMemoryEventStore {
         let hash = hash::compute_hash(
             &event.id,
             event.timestamp,
-            event_type,
+            entity_type,
             &payload_json,
             &event.actor,
             &prev_hash,
@@ -257,11 +254,12 @@ mod tests {
         };
         let event = EventEnvelope::new(payload.clone(), "user1");
 
-        let seq = store.append(&event, "TestEvent").unwrap();
+        let entity_id = "entity-1";
+        let seq = store.append(&event, "TestEvent", entity_id).unwrap();
         assert_eq!(seq, 1);
 
         let retrieved = store
-            .get_events::<TestPayload>("generic", &event.id.to_string())
+            .get_events::<TestPayload>("TestEvent", entity_id)
             .unwrap();
         assert_eq!(retrieved.len(), 1);
         assert_eq!(retrieved[0].payload.value, 42);
