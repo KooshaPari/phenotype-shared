@@ -233,7 +233,7 @@ impl EventStore for InMemoryEventStore {
             .map(|e| (e.hash.clone(), e.prev_hash.clone()))
             .collect();
 
-        hash::verify_chain(&chain).map_err(|e| EventStoreError::InvalidHash(e.to_string()))
+        Ok(hash::verify_chain(&chain).map_err(|e| EventStoreError::InvalidHash(e.to_string()))?)
     }
 }
 
