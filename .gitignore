@@ -8,3 +8,7 @@ Cargo.lock
 docs/.vitepress/cache
 docs/.vitepress/dist
 node_modules
+docs/bun.lock
+docs/tests/
+docs/vitest.config.ts
+vendor/
