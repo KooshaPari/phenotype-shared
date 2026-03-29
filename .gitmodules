@@ -1,0 +1,3 @@
+[submodule "docs/phenodocs"]
+	path = docs/phenodocs
+	url = https://github.com/KooshaPari/phenodocs.git
