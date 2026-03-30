@@ -1,6 +1,17 @@
-# phenotype-infrakit
+<!-- Base: platforms/thegent/dotfiles/governance/CLAUDE.base.md -->
+<!-- Last synced: 2026-03-29 -->
 
-**This project is managed through AgilePlus.**
+# phenotype-shared — CLAUDE.md
+
+Extends thegent governance base. See `platforms/thegent/dotfiles/governance/CLAUDE.base.md` for canonical definitions.
+
+## Project Overview
+
+- **Name**: phenotype-shared
+- **Description**: Rust workspace containing shared generic infrastructure crates extracted from the Phenotype ecosystem
+- **Location**: `/Users/kooshapari/CodeProjects/Phenotype/phenotype-shared-temp`
+- **Language Stack**: Rust (edition 2021)
+- **Published**: Internal (shared across Phenotype org)
 
 ## AgilePlus Mandate
 
@@ -19,8 +30,7 @@ All work MUST be tracked in AgilePlus:
 
 ## Project
 
-Rust workspace containing generic infrastructure crates extracted from the Phenotype ecosystem.
-Each crate is independent, domain-agnostic, and can be consumed individually.
+Rust workspace containing generic infrastructure crates extracted from the Phenotype ecosystem. Each crate is independent, domain-agnostic, and can be consumed individually.
 
 ## Stack
 
@@ -56,3 +66,45 @@ crates/
 3. Use `workspace = true` for shared dependencies
 4. Include inline tests with `#[cfg(test)]`
 5. Update `README.md` crate table
+
+---
+
+## Local Quality Checks
+
+From this repository root:
+
+```bash
+cargo test --workspace
+cargo clippy --workspace -- -D warnings
+cargo fmt --check
+```
+
+## Testing & Specification Traceability
+
+All tests MUST reference a Functional Requirement (FR):
+
+```rust
+// Traces to: FR-SHARED-NNN
+#[test]
+fn test_feature_name() {
+    // Test body
+}
+```
+
+**Verification**:
+- Every FR in FUNCTIONAL_REQUIREMENTS.md MUST have >=1 test
+- Every test MUST reference >=1 FR
+- Run: `cargo test --workspace` to verify
+
+---
+
+## Governance Reference
+
+See thegent governance base for:
+- Complete CI completeness policy
+- Phenotype Git and Delivery Workflow Protocol
+- Phenotype Org Cross-Project Reuse Protocol
+- Phenotype Long-Term Stability and Non-Destructive Change Protocol
+- Worktree Discipline guidelines
+
+Location: `platforms/thegent/dotfiles/governance/CLAUDE.base.md`
