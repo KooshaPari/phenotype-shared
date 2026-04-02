@@ -18,7 +18,7 @@ impl TaskId {
     }
 
     /// Parses a TaskId from a string.
-    pub fn from_str(s: &str) -> Result<Self, ValidationError> {
+    pub fn parse(s: &str) -> Result<Self, ValidationError> {
         let s = s.trim();
         if s.is_empty() {
             return Err(ValidationError::new("TaskId", "cannot be empty"));
@@ -75,13 +75,13 @@ mod tests {
     }
 
     #[test]
-    fn test_from_str() {
-        let id = TaskId::from_str("task123").unwrap();
+    fn test_parse() {
+        let id = TaskId::parse("task123").unwrap();
         assert_eq!(id.as_str(), "task123");
     }
 
     #[test]
     fn test_invalid() {
-        assert!(TaskId::from_str("").is_err());
+        assert!(TaskId::parse("").is_err());
     }
 }

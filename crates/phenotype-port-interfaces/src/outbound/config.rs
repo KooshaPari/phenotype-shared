@@ -3,8 +3,8 @@
 //! Configuration ports define configuration access patterns.
 
 use crate::error::Result;
-use serde::de::DeserializeOwned;
 use async_trait::async_trait;
+use serde::de::DeserializeOwned;
 
 /// Configuration port alias for common naming conventions.
 pub trait ConfigProvider: Config {}
@@ -41,12 +41,16 @@ pub trait ConfigExt: Config {
 
     /// Get a string with default.
     async fn get_string(&self, key: &str, default: &str) -> Result<String> {
-        self.get::<String>(key).await.map(|opt| opt.unwrap_or_else(|| default.to_string()))
+        self.get::<String>(key)
+            .await
+            .map(|opt| opt.unwrap_or_else(|| default.to_string()))
     }
 
     /// Get a boolean with default.
     async fn get_bool(&self, key: &str, default: bool) -> Result<bool> {
-        self.get::<bool>(key).await.map(|opt| opt.unwrap_or(default))
+        self.get::<bool>(key)
+            .await
+            .map(|opt| opt.unwrap_or(default))
     }
 
     /// Get an integer with default.

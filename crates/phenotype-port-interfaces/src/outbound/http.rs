@@ -42,7 +42,8 @@ impl HttpRequest {
     }
 
     pub fn with_json_body<T: Serialize>(mut self, body: &T) -> Result<Self> {
-        self.headers.insert("Content-Type".to_string(), "application/json".to_string());
+        self.headers
+            .insert("Content-Type".to_string(), "application/json".to_string());
         self.body = Some(serde_json::to_vec(body)?);
         Ok(self)
     }
@@ -74,7 +75,11 @@ pub trait HttpClient: Send + Sync {
     }
 
     /// Send a POST request with JSON body.
-    async fn post_json<T: Serialize + std::marker::Sync>(&self, url: &str, body: &T) -> Result<HttpResponse> {
+    async fn post_json<T: Serialize + std::marker::Sync>(
+        &self,
+        url: &str,
+        body: &T,
+    ) -> Result<HttpResponse> {
         let request = HttpRequest::new(HttpMethod::Post, url).with_json_body(body)?;
         self.send(request).await
     }

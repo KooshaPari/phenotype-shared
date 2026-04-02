@@ -73,15 +73,15 @@
 #![allow(missing_docs)]
 
 pub mod commands;
-pub mod queries;
-pub mod handlers;
 pub mod dto;
+pub mod handlers;
+pub mod queries;
 
 // Re-exports
 pub use commands::*;
-pub use queries::*;
-pub use handlers::*;
 pub use dto::*;
+pub use handlers::*;
+pub use queries::*;
 
 /// Application layer error type.
 #[derive(Debug, thiserror::Error)]

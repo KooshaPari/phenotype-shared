@@ -3,8 +3,8 @@
 //! Filesystem ports define file operations.
 
 use crate::error::Result;
-use std::path::Path;
 use async_trait::async_trait;
+use std::path::Path;
 
 /// File system port for file operations.
 #[async_trait]

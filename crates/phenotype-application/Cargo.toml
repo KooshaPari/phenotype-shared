@@ -35,7 +35,7 @@ tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
 
 # Validation
-validator = { workspace = true }
+validator = { version = "0.18", features = ["derive"] }
 
 # Time and ID generation
 chrono = { workspace = true }

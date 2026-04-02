@@ -38,7 +38,7 @@ impl Timestamp {
     }
 
     /// Returns a human-readable ISO 8601-like string (simplified).
-    pub fn to_iso_string(&self) -> String {
+    pub fn iso_string(&self) -> String {
         let secs = self.0 / 1000;
         let ms = self.0 % 1000;
         format!("{}ms.{}", secs, ms)
@@ -57,7 +57,7 @@ impl Timestamp {
 
 impl core::fmt::Display for Timestamp {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{}", self.to_iso_string())
+        write!(f, "{}", self.iso_string())
     }
 }
 

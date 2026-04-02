@@ -2,8 +2,8 @@
 //!
 //! Simple Redis cache implementation.
 
-use deadpool_redis::{Config, Pool, Runtime};
 use deadpool_redis::redis::RedisError;
+use deadpool_redis::{Config, Pool, Runtime};
 
 use crate::error::RedisError as AppRedisError;
 use crate::redis_config::RedisConfig;
@@ -28,7 +28,11 @@ impl RedisCache {
 
     /// Get a value by key.
     pub async fn get(&self, key: &str) -> Result<Option<Vec<u8>>, AppRedisError> {
-        let mut conn = self.pool.get().await.map_err(|e| AppRedisError::Pool(e.to_string()))?;
+        let mut conn = self
+            .pool
+            .get()
+            .await
+            .map_err(|e| AppRedisError::Pool(e.to_string()))?;
         let result: Result<Option<Vec<u8>>, RedisError> = deadpool_redis::redis::cmd("GET")
             .arg(key)
             .query_async(&mut conn)
@@ -37,8 +41,17 @@ impl RedisCache {
     }
 
     /// Set a value with optional TTL.
-    pub async fn set(&self, key: &str, value: Vec<u8>, ttl_secs: Option<u64>) -> Result<(), AppRedisError> {
-        let mut conn = self.pool.get().await.map_err(|e| AppRedisError::Pool(e.to_string()))?;
+    pub async fn set(
+        &self,
+        key: &str,
+        value: Vec<u8>,
+        ttl_secs: Option<u64>,
+    ) -> Result<(), AppRedisError> {
+        let mut conn = self
+            .pool
+            .get()
+            .await
+            .map_err(|e| AppRedisError::Pool(e.to_string()))?;
         match ttl_secs {
             Some(ttl) => {
                 let result: Result<(), RedisError> = deadpool_redis::redis::cmd("SETEX")
@@ -63,7 +76,11 @@ impl RedisCache {
 
     /// Delete a key.
     pub async fn delete(&self, key: &str) -> Result<(), AppRedisError> {
-        let mut conn = self.pool.get().await.map_err(|e| AppRedisError::Pool(e.to_string()))?;
+        let mut conn = self
+            .pool
+            .get()
+            .await
+            .map_err(|e| AppRedisError::Pool(e.to_string()))?;
         let result: Result<i64, RedisError> = deadpool_redis::redis::cmd("DEL")
             .arg(key)
             .query_async(&mut conn)
@@ -74,7 +91,11 @@ impl RedisCache {
 
     /// Check if a key exists.
     pub async fn exists(&self, key: &str) -> Result<bool, AppRedisError> {
-        let mut conn = self.pool.get().await.map_err(|e| AppRedisError::Pool(e.to_string()))?;
+        let mut conn = self
+            .pool
+            .get()
+            .await
+            .map_err(|e| AppRedisError::Pool(e.to_string()))?;
         let result: Result<i64, RedisError> = deadpool_redis::redis::cmd("EXISTS")
             .arg(key)
             .query_async(&mut conn)

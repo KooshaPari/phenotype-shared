@@ -46,7 +46,12 @@ impl Agent {
     }
 
     /// Creates an Agent with a specific ID (for reconstitution from events).
-    pub fn with_id(id: AgentId, name: AgentName, status: AgentStatus, created_at: Timestamp) -> Self {
+    pub fn with_id(
+        id: AgentId,
+        name: AgentName,
+        status: AgentStatus,
+        created_at: Timestamp,
+    ) -> Self {
         let now = Timestamp::now();
         Self {
             id,
@@ -104,7 +109,8 @@ impl Agent {
             (AgentStatus::Paused, AgentStatus::Idle) => {}
             // Terminal states cannot transition
             (AgentStatus::Stopped, _) => return Err("Cannot transition from Stopped"),
-            (AgentStatus::Error, AgentStatus::Active) | (AgentStatus::Error, AgentStatus::Idle) => {}
+            (AgentStatus::Error, AgentStatus::Active) | (AgentStatus::Error, AgentStatus::Idle) => {
+            }
             // Default: allow other transitions
             _ => {}
         }

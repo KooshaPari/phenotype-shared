@@ -50,9 +50,11 @@ impl PostgresRepository {
 
     /// Initialize the database schema.
     pub async fn initialize(&self) -> Result<(), PostgresError> {
-        let client = self.pool.get().await.map_err(|e| {
-            PostgresError::Pool(e.to_string())
-        })?;
+        let client = self
+            .pool
+            .get()
+            .await
+            .map_err(|e| PostgresError::Pool(e.to_string()))?;
 
         let query = format!(
             r#"
@@ -68,9 +70,10 @@ impl PostgresRepository {
             self.table_name
         );
 
-        client.execute(&query, &[]).await.map_err(|e| {
-            PostgresError::Query(e.to_string())
-        })?;
+        client
+            .execute(&query, &[])
+            .await
+            .map_err(|e| PostgresError::Query(e.to_string()))?;
 
         Ok(())
     }

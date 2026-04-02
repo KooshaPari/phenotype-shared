@@ -3,8 +3,8 @@
 //! Command ports define write operations (CQRS pattern).
 
 use crate::error::Result;
-use serde::Deserialize;
 use async_trait::async_trait;
+use serde::Deserialize;
 
 /// A command represents an intent to change state.
 pub trait Command: Send + Sync + serde::Serialize + 'static {

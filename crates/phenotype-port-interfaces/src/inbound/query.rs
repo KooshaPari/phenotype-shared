@@ -39,11 +39,16 @@ pub struct Paginated<T> {
 
 impl<T> Paginated<T> {
     pub fn new(items: Vec<T>, page: u32, page_size: u32, total: u64) -> Self {
-        Self { items, page, page_size, total }
+        Self {
+            items,
+            page,
+            page_size,
+            total,
+        }
     }
 
     pub fn total_pages(&self) -> u32 {
-        ((self.total + self.page_size as u64 - 1) / self.page_size as u64) as u32
+        self.total.div_ceil(self.page_size as u64) as u32
     }
 
     pub fn has_next(&self) -> bool {

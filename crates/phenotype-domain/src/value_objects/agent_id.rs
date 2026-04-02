@@ -26,7 +26,7 @@ impl AgentId {
     }
 
     /// Parses an AgentId from a string.
-    pub fn from_str(s: &str) -> Result<Self, ValidationError> {
+    pub fn parse(s: &str) -> Result<Self, ValidationError> {
         let s = s.trim();
         if s.is_empty() {
             return Err(ValidationError::new("AgentId", "cannot be empty"));
@@ -90,33 +90,35 @@ mod tests {
     }
 
     #[test]
-    fn test_from_str_valid() {
+    fn test_parse_valid() {
         // Use valid hex string (26 chars, only 0-9 and A-F)
-        let id = AgentId::from_str("0123456789ABCDEF0123456789").unwrap();
+        let id = AgentId::parse("0123456789ABCDEF0123456789").unwrap();
         assert_eq!(id.as_str(), "0123456789ABCDEF0123456789");
     }
 
     #[test]
-    fn test_from_str_invalid() {
-        assert!(AgentId::from_str("").is_err());
-        assert!(AgentId::from_str("not-hex!").is_err());
-        assert!(AgentId::from_str("G".repeat(33).as_str()).is_err());
+    fn test_parse_invalid() {
+        assert!(AgentId::parse("").is_err());
+        assert!(AgentId::parse("not-hex!").is_err());
+        assert!(AgentId::parse("G".repeat(33).as_str()).is_err());
     }
 
     #[test]
     fn test_is_ulid_format() {
         // Valid ULID-like format (26 chars hex)
-        let id = AgentId::from_str("0123456789ABCDEF0123456789").unwrap();
+        let id = AgentId::parse("0123456789ABCDEF0123456789").unwrap();
         assert!(id.is_ulid_format());
         // Too short
-        assert!(!AgentId::from_str("abc").unwrap().is_ulid_format());
+        assert!(!AgentId::parse("abc").unwrap().is_ulid_format());
         // Wrong length
-        assert!(!AgentId::from_str("0123456789ABCDEF01234567").unwrap().is_ulid_format());
+        assert!(!AgentId::parse("0123456789ABCDEF01234567")
+            .unwrap()
+            .is_ulid_format());
     }
 
     #[test]
     fn test_display() {
-        let id = AgentId::from_str("0123456789ABCDEF0123456789").unwrap();
+        let id = AgentId::parse("0123456789ABCDEF0123456789").unwrap();
         assert_eq!(format!("{}", id), "0123456789ABCDEF0123456789");
     }
 }

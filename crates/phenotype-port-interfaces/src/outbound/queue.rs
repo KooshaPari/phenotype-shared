@@ -3,8 +3,8 @@
 //! Queue ports define message queue operations.
 
 use crate::error::Result;
-use serde::{Deserialize, Serialize};
 use async_trait::async_trait;
+use serde::{Deserialize, Serialize};
 
 /// Message envelope for queue operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -78,7 +78,11 @@ pub trait Queue: Send + Sync {
 #[async_trait]
 pub trait EventQueue<E: Clone + Send + Sync + serde::Serialize>: Send + Sync {
     /// Publish an event.
-    async fn publish(&self, topic: &str, event: &crate::domain::event::EventEnvelope<E>) -> Result<()>;
+    async fn publish(
+        &self,
+        topic: &str,
+        event: &crate::domain::event::EventEnvelope<E>,
+    ) -> Result<()>;
 
     /// Subscribe to events on a topic.
     async fn subscribe(

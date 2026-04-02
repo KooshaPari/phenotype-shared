@@ -16,7 +16,7 @@ pub enum LogLevel {
 }
 
 impl LogLevel {
-    pub fn from_str(s: &str) -> Self {
+    pub fn parse(s: &str) -> Self {
         match s.to_lowercase().as_str() {
             "trace" => LogLevel::Trace,
             "debug" => LogLevel::Debug,
@@ -49,7 +49,11 @@ impl LogRecord {
         }
     }
 
-    pub fn with_field(mut self, key: impl Into<String>, value: impl Into<serde_json::Value>) -> Self {
+    pub fn with_field(
+        mut self,
+        key: impl Into<String>,
+        value: impl Into<serde_json::Value>,
+    ) -> Self {
         self.fields.insert(key.into(), value.into());
         self
     }
@@ -70,11 +74,19 @@ pub trait Logger: Send + Sync {
 /// Extension trait for logger with convenience methods.
 pub trait LoggerExt: Logger {
     fn trace(&self, target: &str, message: &str) -> Result<()> {
-        self.log(&LogRecord::new(LogLevel::Trace, target, message.to_string()))
+        self.log(&LogRecord::new(
+            LogLevel::Trace,
+            target,
+            message.to_string(),
+        ))
     }
 
     fn debug(&self, target: &str, message: &str) -> Result<()> {
-        self.log(&LogRecord::new(LogLevel::Debug, target, message.to_string()))
+        self.log(&LogRecord::new(
+            LogLevel::Debug,
+            target,
+            message.to_string(),
+        ))
     }
 
     fn info(&self, target: &str, message: &str) -> Result<()> {
@@ -86,10 +98,20 @@ pub trait LoggerExt: Logger {
     }
 
     fn error(&self, target: &str, message: &str) -> Result<()> {
-        self.log(&LogRecord::new(LogLevel::Error, target, message.to_string()))
+        self.log(&LogRecord::new(
+            LogLevel::Error,
+            target,
+            message.to_string(),
+        ))
     }
 
-    fn log_structured(&self, level: LogLevel, target: &str, message: &str, fields: impl IntoIterator<Item = (String, serde_json::Value)>) -> Result<()> {
+    fn log_structured(
+        &self,
+        level: LogLevel,
+        target: &str,
+        message: &str,
+        fields: impl IntoIterator<Item = (String, serde_json::Value)>,
+    ) -> Result<()> {
         let mut record = LogRecord::new(level, target, message.to_string());
         for (k, v) in fields {
             record.fields.insert(k, v);

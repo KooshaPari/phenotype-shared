@@ -3,8 +3,8 @@
 //! Cache ports define caching capabilities.
 
 use crate::error::Result;
-use std::time::Duration;
 use async_trait::async_trait;
+use std::time::Duration;
 
 /// Cache port for key-value caching operations.
 #[async_trait]

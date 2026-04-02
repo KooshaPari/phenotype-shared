@@ -15,7 +15,9 @@ use crate::store::EventStore;
 /// This is NOT suitable for production use. Use for testing only.
 pub struct InMemoryEventStore {
     // Map: entity_type -> (entity_id -> Vec<(sequence, hash, prev_hash, json)>)
-    events: RwLock<std::collections::BTreeMap<String, std::collections::BTreeMap<String, Vec<StoredEvent>>>>,
+    events: RwLock<
+        std::collections::BTreeMap<String, std::collections::BTreeMap<String, Vec<StoredEvent>>>,
+    >,
 }
 
 #[derive(Clone, Debug)]
@@ -66,17 +68,28 @@ impl EventStore for InMemoryEventStore {
     fn append<T: Serialize + for<'de> Deserialize<'de>>(
         &self,
         event: &EventEnvelope<T>,
-        entity_type: &str,
-        entity_id: &str,
+        aggregate_type: &str,
+        aggregate_id: &str,
     ) -> Result<i64> {
-        let mut store = self.events.write().map_err(|_| EventStoreError::StorageError("Lock poisoned".into()))?;
+        let mut store = self
+            .events
+            .write()
+            .map_err(|_| EventStoreError::StorageError("Lock poisoned".into()))?;
 
-        // Get or create the entity's event list
-        let entity_map = store.entry(entity_type.to_string()).or_insert_with(std::collections::BTreeMap::new);
-        let events = entity_map.entry(entity_id.to_string()).or_insert_with(Vec::new);
+        // Get or create the aggregate's event list
+        let aggregate_map = store
+            .entry(aggregate_type.to_string())
+            .or_insert_with(std::collections::BTreeMap::new);
+        let events = aggregate_map
+            .entry(aggregate_id.to_string())
+            .or_insert_with(Vec::new);
 
         // Compute sequence number and hash
-        let sequence = if events.is_empty() { 1 } else { events.last().unwrap().sequence + 1 };
+        let sequence = if events.is_empty() {
+            1
+        } else {
+            events.last().unwrap().sequence + 1
+        };
         let prev_hash = if events.is_empty() {
             "0".repeat(64)
         } else {
@@ -91,11 +104,12 @@ impl EventStore for InMemoryEventStore {
         let hash = hash::compute_hash(
             &event.id,
             event.timestamp,
-            entity_type,
+            aggregate_type,
             &payload_json,
             &event.actor,
             &prev_hash,
-        ).map_err(|e| EventStoreError::InvalidHash(e.to_string()))?;
+        )
+        .map_err(|e| EventStoreError::InvalidHash(e.to_string()))?;
 
         // Store the event
         events.push(StoredEvent {
@@ -103,6 +117,7 @@ impl EventStore for InMemoryEventStore {
             hash,
             prev_hash,
             payload_json,
+            event_type: aggregate_type.to_string(),
             actor: event.actor.clone(),
             timestamp: event.timestamp,
             id: event.id,
@@ -113,15 +128,20 @@ impl EventStore for InMemoryEventStore {
 
     fn get_events<T: Serialize + for<'de> Deserialize<'de>>(
         &self,
-        entity_type: &str,
-        entity_id: &str,
+        aggregate_type: &str,
+        aggregate_id: &str,
     ) -> Result<Vec<EventEnvelope<T>>> {
-        let store = self.events.read().map_err(|_| EventStoreError::StorageError("Lock poisoned".into()))?;
+        let store = self
+            .events
+            .read()
+            .map_err(|_| EventStoreError::StorageError("Lock poisoned".into()))?;
 
         let events = store
-            .get(entity_type)
-            .and_then(|m| m.get(entity_id))
-            .ok_or_else(|| EventStoreError::NotFound(format!("{}/{}", entity_type, entity_id)))?;
+            .get(aggregate_type)
+            .and_then(|m| m.get(aggregate_id))
+            .ok_or_else(|| {
+                EventStoreError::NotFound(format!("{}/{}", aggregate_type, aggregate_id))
+            })?;
 
         events
             .iter()
@@ -143,16 +163,21 @@ impl EventStore for InMemoryEventStore {
 
     fn get_events_since<T: Serialize + for<'de> Deserialize<'de>>(
         &self,
-        entity_type: &str,
-        entity_id: &str,
+        aggregate_type: &str,
+        aggregate_id: &str,
         sequence: i64,
     ) -> Result<Vec<EventEnvelope<T>>> {
-        let store = self.events.read().map_err(|_| EventStoreError::StorageError("Lock poisoned".into()))?;
+        let store = self
+            .events
+            .read()
+            .map_err(|_| EventStoreError::StorageError("Lock poisoned".into()))?;
 
         let events = store
-            .get(entity_type)
-            .and_then(|m| m.get(entity_id))
-            .ok_or_else(|| EventStoreError::NotFound(format!("{}/{}", entity_type, entity_id)))?;
+            .get(aggregate_type)
+            .and_then(|m| m.get(aggregate_id))
+            .ok_or_else(|| {
+                EventStoreError::NotFound(format!("{}/{}", aggregate_type, aggregate_id))
+            })?;
 
         events
             .iter()
@@ -175,17 +200,22 @@ impl EventStore for InMemoryEventStore {
 
     fn get_events_by_range<T: Serialize + for<'de> Deserialize<'de>>(
         &self,
-        entity_type: &str,
-        entity_id: &str,
+        aggregate_type: &str,
+        aggregate_id: &str,
         from: DateTime<Utc>,
         to: DateTime<Utc>,
     ) -> Result<Vec<EventEnvelope<T>>> {
-        let store = self.events.read().map_err(|_| EventStoreError::StorageError("Lock poisoned".into()))?;
+        let store = self
+            .events
+            .read()
+            .map_err(|_| EventStoreError::StorageError("Lock poisoned".into()))?;
 
         let events = store
-            .get(entity_type)
-            .and_then(|m| m.get(entity_id))
-            .ok_or_else(|| EventStoreError::NotFound(format!("{}/{}", entity_type, entity_id)))?;
+            .get(aggregate_type)
+            .and_then(|m| m.get(aggregate_id))
+            .ok_or_else(|| {
+                EventStoreError::NotFound(format!("{}/{}", aggregate_type, aggregate_id))
+            })?;
 
         events
             .iter()
@@ -206,23 +236,31 @@ impl EventStore for InMemoryEventStore {
             .collect()
     }
 
-    fn get_latest_sequence(&self, entity_type: &str, entity_id: &str) -> Result<i64> {
-        let store = self.events.read().map_err(|_| EventStoreError::StorageError("Lock poisoned".into()))?;
+    fn get_latest_sequence(&self, aggregate_type: &str, aggregate_id: &str) -> Result<i64> {
+        let store = self
+            .events
+            .read()
+            .map_err(|_| EventStoreError::StorageError("Lock poisoned".into()))?;
 
         Ok(store
-            .get(entity_type)
-            .and_then(|m| m.get(entity_id))
+            .get(aggregate_type)
+            .and_then(|m| m.get(aggregate_id))
             .and_then(|events| events.last().map(|e| e.sequence))
             .unwrap_or(0))
     }
 
-    fn verify_chain(&self, entity_type: &str, entity_id: &str) -> Result<()> {
-        let store = self.events.read().map_err(|_| EventStoreError::StorageError("Lock poisoned".into()))?;
+    fn verify_chain(&self, aggregate_type: &str, aggregate_id: &str) -> Result<()> {
+        let store = self
+            .events
+            .read()
+            .map_err(|_| EventStoreError::StorageError("Lock poisoned".into()))?;
 
         let events = store
-            .get(entity_type)
-            .and_then(|m| m.get(entity_id))
-            .ok_or_else(|| EventStoreError::NotFound(format!("{}/{}", entity_type, entity_id)))?;
+            .get(aggregate_type)
+            .and_then(|m| m.get(aggregate_id))
+            .ok_or_else(|| {
+                EventStoreError::NotFound(format!("{}/{}", aggregate_type, aggregate_id))
+            })?;
 
         // Verify hash chain
         let chain: Vec<(String, String)> = events
@@ -254,12 +292,12 @@ mod tests {
         };
         let event = EventEnvelope::new(payload.clone(), "user1");
 
-        let entity_id = "entity-1";
-        let seq = store.append(&event, "TestEvent", entity_id).unwrap();
+        let agg_id = "entity-1";
+        let seq = store.append(&event, "TestAggregate", agg_id).unwrap();
         assert_eq!(seq, 1);
 
         let retrieved = store
-            .get_events::<TestPayload>("TestEvent", entity_id)
+            .get_events::<TestPayload>("TestAggregate", agg_id)
             .unwrap();
         assert_eq!(retrieved.len(), 1);
         assert_eq!(retrieved[0].payload.value, 42);
@@ -268,13 +306,19 @@ mod tests {
     #[test]
     fn sequence_increments() {
         let store = InMemoryEventStore::new();
-        let p1 = TestPayload { value: 1, name: "a".to_string() };
-        let p2 = TestPayload { value: 2, name: "b".to_string() };
+        let p1 = TestPayload {
+            value: 1,
+            name: "a".to_string(),
+        };
+        let p2 = TestPayload {
+            value: 2,
+            name: "b".to_string(),
+        };
         let e1 = EventEnvelope::new(p1, "user1");
         let e2 = EventEnvelope::new(p2, "user1");
 
-        let s1 = store.append(&e1, "Event", "entity-1").unwrap();
-        let s2 = store.append(&e2, "Event", "entity-1").unwrap();
+        let s1 = store.append(&e1, "Test", "entity-1").unwrap();
+        let s2 = store.append(&e2, "Test", "entity-1").unwrap();
 
         assert_eq!(s1, 1);
         assert_eq!(s2, 2);

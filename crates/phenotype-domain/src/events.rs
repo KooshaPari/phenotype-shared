@@ -180,11 +180,8 @@ mod tests {
     #[test]
     fn test_task_status_changed() {
         let task_id = TaskId::new();
-        let event = TaskStatusChanged::new(
-            task_id.clone(),
-            TaskStatus::Pending,
-            TaskStatus::Running,
-        );
+        let event =
+            TaskStatusChanged::new(task_id.clone(), TaskStatus::Pending, TaskStatus::Running);
 
         assert_eq!(event.event_type(), "TaskStatusChanged");
         assert_eq!(event.old_status, TaskStatus::Pending);

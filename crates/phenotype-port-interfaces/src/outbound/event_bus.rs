@@ -4,8 +4,8 @@
 
 use crate::domain::event::DomainEvent;
 use crate::error::Result;
-use std::fmt::Debug;
 use async_trait::async_trait;
+use std::fmt::Debug;
 
 /// Event handler function type.
 pub type EventHandler<E> = Box<dyn Fn(E) -> Result<()> + Send + Sync>;

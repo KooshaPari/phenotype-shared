@@ -5,8 +5,8 @@
 use crate::domain::entity::Entity;
 use crate::domain::identifier::Identifier;
 use crate::error::Result;
-use std::fmt::Debug;
 use async_trait::async_trait;
+use std::fmt::Debug;
 
 /// Marker trait for entities that can be stored in a repository.
 pub trait StorableEntity: Entity + Debug + Clone + Send + Sync {
@@ -48,10 +48,7 @@ pub trait RepositoryExt: Repository {
         F: FnOnce() -> Self::Entity + Send,
         Self::Entity: Default + Send,
     {
-        Ok(self
-            .find_by_id(id)
-            .await?
-            .unwrap_or_else(|| factory()))
+        Ok(self.find_by_id(id).await?.unwrap_or_else(factory))
     }
 
     /// Count total entities.
