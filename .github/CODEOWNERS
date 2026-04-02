@@ -1,3 +1,56 @@
-# Default owner (sponsor)
-* @kooshapari
+# Global fallback - requires engineering lead review
+* @Phenotype-Enterprise/engineering-leads
 
+# Security-sensitive files
+.github/workflows/security.yml @Phenotype-Enterprise/security-team
+.github/workflows/sast.yml @Phenotype-Enterprise/security-team
+.github/workflows/secrets-scan.yml @Phenotype-Enterprise/security-team
+
+
+Cargo.toml @Phenotype-Enterprise/devops-team
+Cargo.lock @Phenotype-Enterprise/devops-team
+deny.toml @Phenotype-Enterprise/security-team
+
+SECURITY.md @Phenotype-Enterprise/security-team
+
+# CI/CD configuration
+.github/workflows/ @Phenotype-Enterprise/devops-team
+.github/dependabot.yml @Phenotype-Enterprise/devops-team
+.github/codecov.yml @Phenotype-Enterprise/devops-team
+
+# Documentation
+*.md @Phenotype-Enterprise/tech-writers
+docs/ @Phenotype-Enterprise/tech-writers
+README.md @Phenotype-Enterprise/tech-writers @Phenotype-Enterprise/engineering-leads
+CHANGELOG.md @Phenotype-Enterprise/tech-writers
+AGENTS.md @Phenotype-Enterprise/engineering-leads
+CLAUDE.md @Phenotype-Enterprise/engineering-leads
+
+# Core implementation (language-specific)
+
+src/ @Phenotype-Enterprise/backend-team
+crates/ @Phenotype-Enterprise/backend-team
+**/*.rs @Phenotype-Enterprise/backend-team
+
+
+# Tests
+tests/ @Phenotype-Enterprise/qa-team
+
+
+**/tests/ @Phenotype-Enterprise/qa-team
+**/*_tests.rs @Phenotype-Enterprise/qa-team
+
+
+# Configuration files
+config/ @Phenotype-Enterprise/devops-team
+.env.example @Phenotype-Enterprise/devops-team
+
+
+clippy.toml @Phenotype-Enterprise/devops-team
+rustfmt.toml @Phenotype-Enterprise/devops-team
+
+
+# Dev tooling
+.devcontainer/ @Phenotype-Enterprise/devops-team
+docker-compose.yml @Phenotype-Enterprise/devops-team
+Dockerfile* @Phenotype-Enterprise/devops-team
