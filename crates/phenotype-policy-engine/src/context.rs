@@ -51,8 +51,7 @@ impl EvaluationContext {
     /// Sets a numeric fact.
     pub fn set_number(&mut self, key: impl Into<String>, value: f64) {
         if let Some(n) = serde_json::Number::from_f64(value) {
-            self.facts
-                .insert(key.into(), serde_json::Value::Number(n));
+            self.facts.insert(key.into(), serde_json::Value::Number(n));
         }
     }
 

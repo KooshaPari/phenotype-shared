@@ -3,12 +3,12 @@
 //! PostgreSQL adapter for hexagonal architecture.
 
 pub mod error;
-pub mod postgres_repository;
 pub mod postgres_config;
+pub mod postgres_repository;
 
 pub use error::PostgresError;
-pub use postgres_repository::PostgresRepository;
 pub use postgres_config::PostgresConfig;
+pub use postgres_repository::PostgresRepository;
 
 #[cfg(test)]
 mod tests {

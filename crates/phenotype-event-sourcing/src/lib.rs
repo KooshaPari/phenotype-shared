@@ -24,7 +24,7 @@
 //!     },
 //!     "system",
 //! );
-//! let sequence = store.append(&event, "UserCreated").unwrap();
+//! let sequence = store.append(&event, "User", "user-123").unwrap();
 //! ```
 
 pub mod error;

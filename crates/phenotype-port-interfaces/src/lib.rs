@@ -19,4 +19,3 @@ pub mod shared;
 
 // === ERROR TYPES ===
 pub mod error;
-

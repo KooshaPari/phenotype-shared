@@ -52,7 +52,12 @@ let event = EventEnvelope::new(
     UserCreated { user_id: "u-1".into(), email: "a@b.com".into() },
     "system",
 );
-let seq = store.append(&event, "UserCreated").unwrap();
+let seq = store.append(&event, "UserCreated", "u-1").unwrap();
+assert_eq!(seq, 1);
+
+// Retrieve events
+let events = store.get_events::<UserCreated>("UserCreated", "u-1").unwrap();
+assert_eq!(events.len(), 1);
 ```
 
 ### Cache

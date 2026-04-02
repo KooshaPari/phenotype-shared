@@ -98,7 +98,10 @@ mod tests {
     #[test]
     fn test_from_str() {
         assert_eq!("idle".parse::<AgentStatus>().unwrap(), AgentStatus::Idle);
-        assert_eq!("ACTIVE".parse::<AgentStatus>().unwrap(), AgentStatus::Active);
+        assert_eq!(
+            "ACTIVE".parse::<AgentStatus>().unwrap(),
+            AgentStatus::Active
+        );
         assert_eq!("busy".parse::<AgentStatus>().unwrap(), AgentStatus::Busy);
         assert!("unknown".parse::<AgentStatus>().is_err());
     }

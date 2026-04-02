@@ -18,7 +18,7 @@ impl WorkflowId {
     }
 
     /// Parses a WorkflowId from a string.
-    pub fn from_str(s: &str) -> Result<Self, ValidationError> {
+    pub fn parse(s: &str) -> Result<Self, ValidationError> {
         let s = s.trim();
         if s.is_empty() {
             return Err(ValidationError::new("WorkflowId", "cannot be empty"));
@@ -70,8 +70,8 @@ mod tests {
     }
 
     #[test]
-    fn test_from_str() {
-        let id = WorkflowId::from_str("wf123").unwrap();
+    fn test_parse() {
+        let id = WorkflowId::parse("wf123").unwrap();
         assert_eq!(id.as_str(), "wf123");
     }
 }

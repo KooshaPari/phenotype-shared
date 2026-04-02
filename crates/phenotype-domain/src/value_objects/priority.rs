@@ -101,7 +101,7 @@ mod tests {
         // Test at boundary - priority should clamp to 255
         let p = Priority::new(255);
         assert_eq!(p.value(), 255);
-        
+
         // Test below range - should be 0
         let p = Priority::new(0);
         assert_eq!(p.value(), 0);

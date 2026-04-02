@@ -14,7 +14,10 @@ impl WorkflowName {
             return Err(ValidationError::new("WorkflowName", "cannot be empty"));
         }
         if s.len() > 256 {
-            return Err(ValidationError::new("WorkflowName", "exceeds 256 characters"));
+            return Err(ValidationError::new(
+                "WorkflowName",
+                "exceeds 256 characters",
+            ));
         }
         Ok(Self(s))
     }

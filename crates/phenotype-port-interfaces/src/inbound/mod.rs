@@ -3,9 +3,9 @@
 //! Inbound (primary/driving) ports define what the application exposes.
 
 pub mod command;
-pub mod query;
 pub mod event;
+pub mod query;
 
 pub use command::*;
-pub use query::*;
 pub use event::*;
+pub use query::*;

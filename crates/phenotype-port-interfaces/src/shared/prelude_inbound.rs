@@ -3,8 +3,6 @@
 //! Inbound port imports.
 
 pub use crate::inbound::{
-    Command, CommandHandler, CommandBus, CommandBusExt,
-    Query, QueryHandler, QueryBus,
-    EventHandler, EventProcessor,
-    Paginated,
+    Command, CommandBus, CommandBusExt, CommandHandler, EventHandler, EventProcessor, Paginated,
+    Query, QueryBus, QueryHandler,
 };

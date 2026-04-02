@@ -23,36 +23,37 @@ pub trait EventStore: Send + Sync {
     fn append<T: Serialize + for<'de> Deserialize<'de>>(
         &self,
         event: &EventEnvelope<T>,
-        event_type: &str,
+        aggregate_type: &str,
+        aggregate_id: &str,
     ) -> Result<i64>;
 
-    /// Get all events for a given entity type and ID, in ascending sequence order.
+    /// Get all events for a given aggregate, in ascending sequence order.
     fn get_events<T: Serialize + for<'de> Deserialize<'de>>(
         &self,
-        entity_type: &str,
-        entity_id: &str,
+        aggregate_type: &str,
+        aggregate_id: &str,
     ) -> Result<Vec<EventEnvelope<T>>>;
 
     /// Get events from a specific sequence onward (exclusive).
     fn get_events_since<T: Serialize + for<'de> Deserialize<'de>>(
         &self,
-        entity_type: &str,
-        entity_id: &str,
+        aggregate_type: &str,
+        aggregate_id: &str,
         sequence: i64,
     ) -> Result<Vec<EventEnvelope<T>>>;
 
     /// Get events within a time range (inclusive).
     fn get_events_by_range<T: Serialize + for<'de> Deserialize<'de>>(
         &self,
-        entity_type: &str,
-        entity_id: &str,
+        aggregate_type: &str,
+        aggregate_id: &str,
         from: DateTime<Utc>,
         to: DateTime<Utc>,
     ) -> Result<Vec<EventEnvelope<T>>>;
 
-    /// Get the latest event sequence number for an entity (0 if none exist).
-    fn get_latest_sequence(&self, entity_type: &str, entity_id: &str) -> Result<i64>;
+    /// Get the latest event sequence number for an aggregate (0 if none exist).
+    fn get_latest_sequence(&self, aggregate_type: &str, aggregate_id: &str) -> Result<i64>;
 
-    /// Verify the hash chain integrity for an entity.
-    fn verify_chain(&self, entity_type: &str, entity_id: &str) -> Result<()>;
+    /// Verify the hash chain integrity for an aggregate.
+    fn verify_chain(&self, aggregate_type: &str, aggregate_id: &str) -> Result<()>;
 }

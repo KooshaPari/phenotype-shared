@@ -9,7 +9,7 @@ Extends thegent governance base. See `platforms/thegent/dotfiles/governance/CLAU
 
 - **Name**: phenotype-shared
 - **Description**: Rust workspace containing shared generic infrastructure crates extracted from the Phenotype ecosystem
-- **Location**: `/Users/kooshapari/CodeProjects/Phenotype/phenotype-shared-temp`
+- **Location**: `/Users/kooshapari/CodeProjects/Phenotype/repos/phenotype-shared`
 - **Language Stack**: Rust (edition 2021)
 - **Published**: Internal (shared across Phenotype org)
 
