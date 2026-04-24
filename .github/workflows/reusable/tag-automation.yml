@@ -1,0 +1,16 @@
+name: reusable-tag-automation
+on:
+  workflow_call:
+    inputs:
+      message-template:
+        description: Echo template used when a new tag is pushed.
+        required: false
+        type: string
+        default: "Creating release for ${{ github.ref_name }}"
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create release tag
+        run: echo "${{ inputs.message-template }}"
