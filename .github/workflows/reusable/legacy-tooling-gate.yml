@@ -3,6 +3,9 @@ name: Reusable Legacy Tooling Gate (WARN Mode)
 # Reusable workflow: scans repo for legacy tooling anti-patterns using the
 # shared scanner/policy in kooshapari/phenotype. Runs in WARN mode by default.
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:

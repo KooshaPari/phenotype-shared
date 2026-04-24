@@ -1,5 +1,8 @@
 name: Rust Quality Gates
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:

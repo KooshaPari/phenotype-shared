@@ -8,6 +8,10 @@ name: reusable-self-merge-gate
 #     gate:
 #       uses: KooshaPari/phenoShared/.github/workflows/reusable/self-merge-gate.yml@main
 
+permissions:
+  contents: read
+  pull-requests: read
+
 on:
   workflow_call:
     inputs:

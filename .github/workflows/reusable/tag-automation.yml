@@ -10,6 +10,9 @@ name: reusable-tag-automation
 #     tag:
 #       uses: KooshaPari/phenoShared/.github/workflows/reusable/tag-automation.yml@main
 
+permissions:
+  contents: write
+
 on:
   workflow_call:
     inputs:

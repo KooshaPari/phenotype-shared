@@ -2,6 +2,11 @@ name: Reusable SAST (CodeQL)
 
 # Reusable workflow: CodeQL static analysis across configurable languages.
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 on:
   workflow_call:
     inputs:

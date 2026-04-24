@@ -1,5 +1,10 @@
 name: Reusable VitePress Pages Deploy
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 on:
   workflow_call:
     inputs:

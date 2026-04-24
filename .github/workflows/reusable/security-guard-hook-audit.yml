@@ -5,6 +5,9 @@ name: Reusable Security Guard (Hooks) Audit
 # Replaces duplicated `.github/workflows/security-guard-hook-audit.yml`
 # across KooshaPari repos.
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:

@@ -3,6 +3,9 @@ name: Reusable Release (Rust / crates.io)
 # Reusable workflow: build, test, and publish a Rust crate to crates.io,
 # then promote via phenotypeActions/promote.
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:

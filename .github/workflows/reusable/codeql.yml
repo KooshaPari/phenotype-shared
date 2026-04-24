@@ -5,6 +5,11 @@ name: Reusable CodeQL
 # Supported languages: actions, cpp, csharp, go, java, javascript, javascript-typescript,
 # kotlin, python, ruby, rust, swift.
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 on:
   workflow_call:
     inputs:
