@@ -1,0 +1,94 @@
+name: Reusable CodeQL
+
+# Reusable CodeQL workflow for KooshaPari org.
+# Callers pass a JSON array of languages and optional build-mode / build-command.
+# Supported languages: actions, cpp, csharp, go, java, javascript, javascript-typescript,
+# kotlin, python, ruby, rust, swift.
+
+on:
+  workflow_call:
+    inputs:
+      languages:
+        description: 'JSON array of CodeQL languages, e.g. ["actions","python"]'
+        required: true
+        type: string
+      build-mode:
+        description: 'Build mode: none | autobuild | manual'
+        required: false
+        type: string
+        default: 'none'
+      build-command:
+        description: 'Shell command used when build-mode=manual'
+        required: false
+        type: string
+        default: ''
+      queries:
+        description: 'CodeQL query suites (comma-separated)'
+        required: false
+        type: string
+        default: ''
+      codeql-version:
+        description: 'Major version of github/codeql-action to use (v3 or v4)'
+        required: false
+        type: string
+        default: 'v3'
+
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ${{ fromJSON(inputs.languages) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL (v3)
+        if: inputs.codeql-version == 'v3'
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: ${{ inputs.queries }}
+
+      - name: Initialize CodeQL (v4)
+        if: inputs.codeql-version == 'v4'
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          queries: ${{ inputs.queries }}
+
+      - name: Autobuild (v3)
+        if: inputs.build-mode == 'autobuild' && inputs.codeql-version == 'v3'
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Autobuild (v4)
+        if: inputs.build-mode == 'autobuild' && inputs.codeql-version == 'v4'
+        uses: github/codeql-action/autobuild@v4
+
+      - name: Manual build
+        if: inputs.build-mode == 'manual' && inputs.build-command != ''
+        shell: bash
+        run: ${{ inputs.build-command }}
+
+      - name: Perform CodeQL Analysis (v3)
+        if: inputs.codeql-version == 'v3'
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+      - name: Perform CodeQL Analysis (v4)
+        if: inputs.codeql-version == 'v4'
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"
