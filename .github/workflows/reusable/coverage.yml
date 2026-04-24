@@ -4,6 +4,9 @@ name: Reusable Coverage
 # Default command assumes a Rust project using cargo-llvm-cov; override `coverage-command`
 # for Python/TS/Go consumers.
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:

@@ -3,6 +3,9 @@ name: Reusable CI (Rust)
 # Reusable workflow: Rust CI (build, test, clippy) + optional governance validation.
 # Called by consumers via `uses: KooshaPari/phenoShared/.github/workflows/reusable/ci.yml@main`.
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:
