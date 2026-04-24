@@ -1,0 +1,44 @@
+name: Reusable Security Guard (Hooks) Audit
+
+# Reusable workflow: verifies `.github/hooks/pre-commit` and
+# `.github/hooks/security-guard.sh` are present, executable, and pass.
+# Replaces duplicated `.github/workflows/security-guard-hook-audit.yml`
+# across KooshaPari repos.
+
+on:
+  workflow_call:
+    inputs:
+      checkout-version:
+        description: 'actions/checkout version tag (e.g. v4, v6)'
+        type: string
+        required: false
+        default: 'v6'
+      runs-on:
+        description: 'Runner label'
+        type: string
+        required: false
+        default: 'ubuntu-latest'
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Wire Git hook path and verify guard hook
+        run: |
+          git config core.hooksPath .github/hooks
+          test -f .github/hooks/pre-commit
+          test -x .github/hooks/pre-commit
+          test -f .github/hooks/security-guard.sh
+          test -x .github/hooks/security-guard.sh
+
+      - name: Run security guard hook
+        run: |
+          .github/hooks/pre-commit
