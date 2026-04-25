@@ -12,6 +12,11 @@ on:
         type: string
         required: false
         default: 'auto-alert-sync'
+      min_severity:
+        description: "Filter alerts: 'low', 'medium', 'high', 'critical' (only file Dependabot/CodeQL issues at this severity or higher). Does not affect CI failure issues."
+        type: string
+        required: false
+        default: 'low'
 
 permissions:
   actions: read
@@ -31,6 +36,20 @@ jobs:
             const repo = context.repo.repo;
 
             const AUTO_LABEL = '${{ inputs.auto-label }}' || 'auto-alert-sync';
+            const MIN_SEVERITY_RAW = ('${{ inputs.min_severity }}' || 'low').toLowerCase();
+            const SEVERITY_RANK = { low: 0, medium: 1, high: 2, critical: 3 };
+            const MIN_SEVERITY_RANK = SEVERITY_RANK[MIN_SEVERITY_RAW];
+            if (MIN_SEVERITY_RANK === undefined) {
+              core.setFailed(`Invalid min_severity '${MIN_SEVERITY_RAW}'. Must be one of: low, medium, high, critical.`);
+              return;
+            }
+            const meetsSeverity = (sev) => {
+              // 'unknown' severities are filed only when the threshold is 'low' (preserves prior behavior).
+              const rank = SEVERITY_RANK[sev];
+              if (rank === undefined) return MIN_SEVERITY_RANK === 0;
+              return rank >= MIN_SEVERITY_RANK;
+            };
+            core.info(`alert-sync min_severity=${MIN_SEVERITY_RAW} (rank ${MIN_SEVERITY_RANK})`);
             const SOURCE_CI = 'source:ci';
             const SOURCE_DEP = 'source:dependabot';
             const SOURCE_CODEQL = 'source:codeql';
@@ -194,12 +213,16 @@ jobs:
 
             for (const alert of dependabotAlerts) {
               const key = `dependabot:${alert.number}`;
-              desiredDepKeys.add(key);
-
               const dependency = alert.dependency?.package?.name || 'unknown-dependency';
               const ecosystem = alert.dependency?.package?.ecosystem || 'unknown';
               const severity = normalizeSeverity(alert.security_advisory?.severity);
               const manifestPath = alert.dependency?.manifest_path || 'unknown';
+
+              if (!meetsSeverity(severity)) {
+                core.info(`Skipping dependabot #${alert.number} (severity=${severity} < ${MIN_SEVERITY_RAW})`);
+                continue;
+              }
+              desiredDepKeys.add(key);
 
               const title = `[Dependabot][${severity}] ${dependency}`;
               const body = `${keyMarker(key)}\n\n` +
@@ -226,13 +249,17 @@ jobs:
 
             for (const alert of codeScanningAlerts) {
               const key = `codeql:${alert.number}`;
-              desiredCodeQlKeys.add(key);
-
               const ruleId = alert.rule?.id || 'unknown-rule';
               const ruleName = alert.rule?.name || ruleId;
               const severity = normalizeSeverity(
                 alert.rule?.security_severity_level || alert.rule?.severity || 'unknown'
               );
+
+              if (!meetsSeverity(severity)) {
+                core.info(`Skipping codeql #${alert.number} (severity=${severity} < ${MIN_SEVERITY_RAW})`);
+                continue;
+              }
+              desiredCodeQlKeys.add(key);
 
               const title = `[CodeQL][${severity}] ${ruleName}`;
               const body = `${keyMarker(key)}\n\n` +
