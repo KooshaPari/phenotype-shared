@@ -166,6 +166,8 @@ jobs:
             const desiredCiKeys = new Set();
             const desiredDepKeys = new Set();
             const desiredCodeQlKeys = new Set();
+            const severityFilteredDepKeys = new Set();
+            const severityFilteredCodeQlKeys = new Set();
 
             const runs = await safePaginate(github.rest.actions.listWorkflowRunsForRepo, {
               owner,
@@ -220,6 +222,7 @@ jobs:
 
               if (!meetsSeverity(severity)) {
                 core.info(`Skipping dependabot #${alert.number} (severity=${severity} < ${MIN_SEVERITY_RAW})`);
+                severityFilteredDepKeys.add(key);
                 continue;
               }
               desiredDepKeys.add(key);
@@ -257,6 +260,7 @@ jobs:
 
               if (!meetsSeverity(severity)) {
                 core.info(`Skipping codeql #${alert.number} (severity=${severity} < ${MIN_SEVERITY_RAW})`);
+                severityFilteredCodeQlKeys.add(key);
                 continue;
               }
               desiredCodeQlKeys.add(key);
@@ -282,10 +286,16 @@ jobs:
                 await closeIssueIfOpen(key, 'latest default-branch workflow run is no longer failing');
               }
               if (key.startsWith('dependabot:') && !desiredDepKeys.has(key)) {
-                await closeIssueIfOpen(key, 'dependabot alert no longer open');
+                const reason = severityFilteredDepKeys.has(key)
+                  ? `alert filtered by min_severity setting (${MIN_SEVERITY_RAW})`
+                  : 'dependabot alert no longer open';
+                await closeIssueIfOpen(key, reason);
               }
               if (key.startsWith('codeql:') && !desiredCodeQlKeys.has(key)) {
-                await closeIssueIfOpen(key, 'code scanning alert no longer open');
+                const reason = severityFilteredCodeQlKeys.has(key)
+                  ? `alert filtered by min_severity setting (${MIN_SEVERITY_RAW})`
+                  : 'code scanning alert no longer open';
+                await closeIssueIfOpen(key, reason);
               }
             }
 
