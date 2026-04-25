@@ -11,7 +11,7 @@ description = "Redis adapter for hexagonal architecture"
 tokio = { version = "1", features = ["full"] }
 
 # Redis - deadpool-redis 0.14 uses redis 0.24 internally
-deadpool-redis = { version = "0.14", features = ["serde"] }
+deadpool-redis = { version = "0.23", features = ["serde"] }
 
 # Serialization
 serde = { version = "1", features = ["derive"] }
