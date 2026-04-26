@@ -3,7 +3,7 @@
 //! This crate provides shared configuration abstractions used across
 //! the Phenotype ecosystem.
 
-use serde::{de::DeserializeOwned, Serialize};
+use serde::de::DeserializeOwned;
 use serde_json::Value;
 use std::path::Path;
 
@@ -178,7 +178,7 @@ impl FileConfig {
     }
 
     /// Loads configuration from the file.
-    pub fn load<T: DeserializeOwned + Serialize>(&self) -> Result<T, FileConfigError> {
+    pub fn load<T: DeserializeOwned>(&self) -> Result<T, FileConfigError> {
         let content = std::fs::read_to_string(&self.path)?;
 
         match self.format {
@@ -223,7 +223,7 @@ pub enum ConfigMergeError {
 }
 
 /// Merges multiple configuration sources.
-pub fn merge_configs<T: DeserializeOwned + Serialize + Default>(
+pub fn merge_configs<T: DeserializeOwned>(
     sources: &[&dyn ConfigLoader],
 ) -> Result<T, Box<dyn std::error::Error>> {
     let mut merged = serde_json::Map::new();
