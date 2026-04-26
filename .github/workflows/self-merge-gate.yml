@@ -1,0 +1,31 @@
+name: reusable-self-merge-gate
+
+# Reusable self-merge gate. Runs the caller repo's
+# ./scripts/self-merge-gate.sh on approved reviews.
+#
+# Callers invoke with:
+#   jobs:
+#     gate:
+#       uses: KooshaPari/phenoShared/.github/workflows/reusable/self-merge-gate.yml@main
+
+permissions:
+  contents: read
+  pull-requests: read
+
+on:
+  workflow_call:
+    inputs:
+      script-path:
+        description: Path to self-merge gate script (relative to repo root)
+        required: false
+        type: string
+        default: ./scripts/self-merge-gate.sh
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    if: github.event.review.state == 'approved'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check self-merge eligibility
+        run: ${{ inputs.script-path }}
