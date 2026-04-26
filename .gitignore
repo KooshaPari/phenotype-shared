@@ -11,3 +11,7 @@ docs/bun.lock
 docs/tests/
 docs/vitest.config.ts
 vendor/
+
+# Worktree directories (org policy)
+.worktrees/
+.claude/worktrees/

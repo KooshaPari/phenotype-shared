@@ -1,5 +1,7 @@
 # phenotype-shared
 
+**Status:** stable
+
 Rust infrastructure toolkit extracted from the Phenotype ecosystem. The workspace now provides shared domain, application, port, and infrastructure crates that support hexagonal and clean architecture across the broader polyrepo.
 
 ## Crates
