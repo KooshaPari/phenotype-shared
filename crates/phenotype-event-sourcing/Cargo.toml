@@ -3,6 +3,7 @@ name = "phenotype-event-sourcing"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "Append-only event store with SHA-256 hash chain verification and snapshot management"
 
 [dependencies]
 serde = { workspace = true }
