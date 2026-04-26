@@ -6,9 +6,11 @@ Rust infrastructure toolkit extracted from the Phenotype ecosystem. The workspac
 
 | Crate | Description |
 |-------|-------------|
+| [`ffi_utils`](crates/ffi_utils) | FFI helper utilities (regex caching, synchronization primitives) for cross-language bindings |
 | [`phenotype-domain`](crates/phenotype-domain) | DDD value objects, entities, aggregates, events, and domain errors |
 | [`phenotype-application`](crates/phenotype-application) | CQRS commands, queries, DTOs, and application handlers |
 | [`phenotype-port-interfaces`](crates/phenotype-port-interfaces) | Hexagonal inbound/outbound port traits and shared contracts |
+| [`phenotype-contracts`](crates/phenotype-contracts) | Async trait contracts and shared interface definitions across the ecosystem |
 | [`phenotype-event-sourcing`](crates/phenotype-event-sourcing) | Append-only event store with hash-chain verification and snapshot management |
 | [`phenotype-cache-adapter`](crates/phenotype-cache-adapter) | Two-tier cache with TTL expiration and observability hooks |
 | [`phenotype-policy-engine`](crates/phenotype-policy-engine) | Rule-based policy evaluation engine with TOML config loading |
@@ -16,6 +18,7 @@ Rust infrastructure toolkit extracted from the Phenotype ecosystem. The workspac
 | [`phenotype-postgres-adapter`](crates/phenotype-postgres-adapter) | PostgreSQL persistence adapter |
 | [`phenotype-redis-adapter`](crates/phenotype-redis-adapter) | Redis persistence / cache adapter |
 | [`phenotype-http-adapter`](crates/phenotype-http-adapter) | HTTP adapter and transport utilities |
+| [`phenotype-nanovms-client`](crates/phenotype-nanovms-client) | Rust client library for NanoVMs unikernel orchestration (wraps the `ops` CLI) |
 
 ## Quick Start
 
