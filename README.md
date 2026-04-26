@@ -15,6 +15,9 @@ Rust infrastructure toolkit extracted from the Phenotype ecosystem. The workspac
 | [`phenotype-cache-adapter`](crates/phenotype-cache-adapter) | Two-tier cache with TTL expiration and observability hooks |
 | [`phenotype-policy-engine`](crates/phenotype-policy-engine) | Rule-based policy evaluation engine with TOML config loading |
 | [`phenotype-state-machine`](crates/phenotype-state-machine) | Generic finite state machine with transition guards and history tracking |
+| [`phenotype-config-core`](crates/phenotype-config-core) | Core configuration types and traits for Phenotype crates |
+| [`phenotype-error-core`](crates/phenotype-error-core) | Canonical error types for the Phenotype ecosystem (API, domain, repository, config, storage) |
+| [`phenotype-health`](crates/phenotype-health) | Shared health check abstraction for Phenotype services |
 | [`phenotype-postgres-adapter`](crates/phenotype-postgres-adapter) | PostgreSQL persistence adapter |
 | [`phenotype-redis-adapter`](crates/phenotype-redis-adapter) | Redis persistence / cache adapter |
 | [`phenotype-http-adapter`](crates/phenotype-http-adapter) | HTTP adapter and transport utilities |
@@ -33,6 +36,9 @@ phenotype-event-sourcing = { git = "https://github.com/KooshaPari/phenotype-shar
 phenotype-cache-adapter = { git = "https://github.com/KooshaPari/phenotype-shared" }
 phenotype-policy-engine = { git = "https://github.com/KooshaPari/phenotype-shared" }
 phenotype-state-machine = { git = "https://github.com/KooshaPari/phenotype-shared" }
+phenotype-config-core = { git = "https://github.com/KooshaPari/phenotype-shared" }
+phenotype-error-core = { git = "https://github.com/KooshaPari/phenotype-shared" }
+phenotype-health = { git = "https://github.com/KooshaPari/phenotype-shared" }
 phenotype-postgres-adapter = { git = "https://github.com/KooshaPari/phenotype-shared" }
 phenotype-redis-adapter = { git = "https://github.com/KooshaPari/phenotype-shared" }
 phenotype-http-adapter = { git = "https://github.com/KooshaPari/phenotype-shared" }
@@ -90,7 +96,7 @@ field = "auth_token"
 let mut ctx = PolicyContext::new();
 ctx.set("auth_token", "abc123");
 let result = engine.evaluate(&ctx).unwrap();
-assert!(result.passed());
+assert!(!result.passed());
 ```
 
 ### State Machine
@@ -125,7 +131,7 @@ cargo test --workspace
 The workspace is organized as a layered hexagonal stack:
 
 - **Domain**: `phenotype-domain` owns value objects, entities, aggregates, events, and domain errors.
-- **Application**: `phenotype-application` coordinates commands, queries, DTOs, and handlers.
+- **Application**: `phenotype-application` coordinates commands, queries, DTOs, and application handlers.
 - **Ports**: `phenotype-port-interfaces` holds technology-agnostic inbound and outbound contracts.
 - **Infrastructure**: event sourcing, cache, policy, state machine, database, Redis, and HTTP adapters live below the core layers.
 
