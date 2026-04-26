@@ -23,9 +23,6 @@ on:
         required: false
         default: false
 
-permissions:
-  contents: read
-
 jobs:
   update_release_draft:
     runs-on: ubuntu-latest
