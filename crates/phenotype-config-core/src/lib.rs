@@ -130,19 +130,22 @@ impl EnvConfig {
 
 impl ConfigLoader for EnvConfig {
     fn load_value(&self) -> Result<Value, Box<dyn std::error::Error>> {
-        let env_vars: std::collections::HashMap<String, String> = match &self.prefix {
+        let env_vars: serde_json::Map<String, Value> = match &self.prefix {
             Some(prefix) => {
                 let prefix = format!("{prefix}_");
                 std::env::vars()
                     .filter_map(|(key, value)| {
-                        key.strip_prefix(&prefix).map(|stripped| (stripped.to_string(), value))
+                        key.strip_prefix(&prefix)
+                            .map(|stripped| (stripped.to_uppercase(), env_value(value)))
                     })
                     .collect()
             }
-            None => std::env::vars().collect(),
+            None => std::env::vars()
+                .map(|(key, value)| (key.to_uppercase(), env_value(value)))
+                .collect(),
         };
 
-        serde_json::to_value(env_vars).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+        Ok(Value::Object(env_vars))
     }
 
     fn source_name(&self) -> &str {
@@ -240,7 +243,7 @@ pub fn merge_configs<T: DeserializeOwned>(
     for source in sources {
         match source.load_value() {
             Ok(Value::Object(map)) => {
-                merged.extend(map);
+                merge_objects(&mut merged, map);
             }
             Ok(value) => {
                 return Err(Box::new(ConfigMergeError::NonObject {
@@ -254,6 +257,26 @@ pub fn merge_configs<T: DeserializeOwned>(
 
     serde_json::from_value(Value::Object(merged))
         .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+}
+
+fn merge_objects(
+    target: &mut serde_json::Map<String, Value>,
+    source: serde_json::Map<String, Value>,
+) {
+    for (key, source_value) in source {
+        match (target.get_mut(&key), source_value) {
+            (Some(Value::Object(target_object)), Value::Object(source_object)) => {
+                merge_objects(target_object, source_object);
+            }
+            (_, value) => {
+                target.insert(key, value);
+            }
+        }
+    }
+}
+
+fn env_value(value: String) -> Value {
+    serde_json::from_str(&value).unwrap_or(Value::String(value))
 }
 
 fn value_kind(value: &Value) -> &'static str {
@@ -316,15 +339,21 @@ mod tests {
     #[test]
     fn test_prefixed_env_config_load_value_is_scoped() {
         std::env::set_var("APP_ALLOWED", "scoped");
+        std::env::set_var("APP_PORT", "8080");
+        std::env::set_var("APP_ENABLED", "true");
         std::env::set_var("OTHER_ALLOWED", "global");
 
         let value = EnvConfig::with_prefix("APP").load_value().unwrap();
 
         assert_eq!(value.get("ALLOWED"), Some(&Value::String("scoped".to_string())));
+        assert_eq!(value.get("PORT"), Some(&serde_json::json!(8080)));
+        assert_eq!(value.get("ENABLED"), Some(&serde_json::json!(true)));
         assert!(value.get("APP_ALLOWED").is_none());
         assert!(value.get("OTHER_ALLOWED").is_none());
 
         std::env::remove_var("APP_ALLOWED");
+        std::env::remove_var("APP_PORT");
+        std::env::remove_var("APP_ENABLED");
         std::env::remove_var("OTHER_ALLOWED");
     }
 
@@ -357,6 +386,25 @@ mod tests {
 
         let merged = merge_configs::<Value>(&[&first, &second]).unwrap();
         assert_eq!(merged, serde_json::json!({ "a": 1, "b": 2 }));
+    }
+
+    #[test]
+    fn test_merge_configs_deep_merges_nested_objects() {
+        let first = StaticLoader {
+            name: "first",
+            value: serde_json::json!({ "database": { "host": "localhost", "port": 5432 } }),
+        };
+        let second = StaticLoader {
+            name: "second",
+            value: serde_json::json!({ "database": { "port": 6432 } }),
+        };
+
+        let merged = merge_configs::<Value>(&[&first, &second]).unwrap();
+
+        assert_eq!(
+            merged,
+            serde_json::json!({ "database": { "host": "localhost", "port": 6432 } })
+        );
     }
 
     #[test]
