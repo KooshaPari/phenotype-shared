@@ -205,26 +205,21 @@ pub enum FileConfigError {
     #[error("failed to read file: {0}")]
     Io(#[from] std::io::Error),
 
-    #[error("failed to parse: {0}")]
-    Parse(String),
+    #[error("failed to parse JSON: {0}")]
+    Json(#[from] serde_json::Error),
+
+    #[error("failed to parse TOML: {0}")]
+    Toml(#[from] toml::de::Error),
+
+    #[error("failed to parse YAML: {0}")]
+    Yaml(#[from] serde_yaml::Error),
 }
 
-impl From<serde_json::Error> for FileConfigError {
-    fn from(e: serde_json::Error) -> Self {
-        Self::Parse(e.to_string())
-    }
-}
-
-impl From<toml::de::Error> for FileConfigError {
-    fn from(e: toml::de::Error) -> Self {
-        Self::Parse(e.to_string())
-    }
-}
-
-impl From<serde_yaml::Error> for FileConfigError {
-    fn from(e: serde_yaml::Error) -> Self {
-        Self::Parse(e.to_string())
-    }
+/// Configuration merge error.
+#[derive(Debug, thiserror::Error)]
+pub enum ConfigMergeError {
+    #[error("configuration source `{source_name}` returned {kind}; expected object")]
+    NonObject { source_name: String, kind: &'static str },
 }
 
 /// Merges multiple configuration sources.
@@ -238,8 +233,13 @@ pub fn merge_configs<T: DeserializeOwned + Serialize + Default>(
             Ok(Value::Object(map)) => {
                 merged.extend(map);
             }
-            Ok(_) => continue,
-            Err(_) => continue,
+            Ok(value) => {
+                return Err(Box::new(ConfigMergeError::NonObject {
+                    source_name: source.source_name().to_string(),
+                    kind: value_kind(&value),
+                }));
+            }
+            Err(err) => return Err(err),
         }
     }
 
@@ -247,9 +247,47 @@ pub fn merge_configs<T: DeserializeOwned + Serialize + Default>(
         .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
 }
 
+fn value_kind(value: &Value) -> &'static str {
+    match value {
+        Value::Null => "null",
+        Value::Bool(_) => "boolean",
+        Value::Number(_) => "number",
+        Value::String(_) => "string",
+        Value::Array(_) => "array",
+        Value::Object(_) => "object",
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    struct StaticLoader {
+        name: &'static str,
+        value: Value,
+    }
+
+    impl ConfigLoader for StaticLoader {
+        fn load_value(&self) -> Result<Value, Box<dyn std::error::Error>> {
+            Ok(self.value.clone())
+        }
+
+        fn source_name(&self) -> &str {
+            self.name
+        }
+    }
+
+    struct ErrorLoader;
+
+    impl ConfigLoader for ErrorLoader {
+        fn load_value(&self) -> Result<Value, Box<dyn std::error::Error>> {
+            Err(Box::new(std::io::Error::new(std::io::ErrorKind::InvalidData, "invalid config")))
+        }
+
+        fn source_name(&self) -> &str {
+            "error-source"
+        }
+    }
 
     #[test]
     fn test_priority_ordering() {
@@ -280,5 +318,35 @@ mod tests {
             ConfigFormat::from_path(std::path::Path::new("config.yaml")),
             Some(ConfigFormat::Yaml)
         );
+    }
+
+    #[test]
+    fn test_file_config_error_preserves_parse_source() {
+        let err: FileConfigError = serde_yaml::from_str::<Value>("[invalid").unwrap_err().into();
+        assert!(std::error::Error::source(&err).is_some());
+    }
+
+    #[test]
+    fn test_merge_configs_merges_object_sources() {
+        let first = StaticLoader { name: "first", value: serde_json::json!({ "a": 1 }) };
+        let second = StaticLoader { name: "second", value: serde_json::json!({ "b": 2 }) };
+
+        let merged = merge_configs::<Value>(&[&first, &second]).unwrap();
+        assert_eq!(merged, serde_json::json!({ "a": 1, "b": 2 }));
+    }
+
+    #[test]
+    fn test_merge_configs_rejects_non_object_sources() {
+        let loader = StaticLoader { name: "array-source", value: serde_json::json!(["invalid"]) };
+
+        let err = merge_configs::<Value>(&[&loader]).unwrap_err();
+        assert!(err.to_string().contains("array-source"));
+        assert!(err.to_string().contains("array"));
+    }
+
+    #[test]
+    fn test_merge_configs_propagates_loader_errors() {
+        let err = merge_configs::<Value>(&[&ErrorLoader]).unwrap_err();
+        assert!(err.to_string().contains("invalid config"));
     }
 }
