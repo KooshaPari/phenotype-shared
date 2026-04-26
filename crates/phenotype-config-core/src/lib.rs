@@ -131,20 +131,17 @@ impl EnvConfig {
 
 impl ConfigLoader for EnvConfig {
     fn load_value(&self) -> Result<Value, ConfigErrorSource> {
-        let env_vars: serde_json::Map<String, Value> = match &self.prefix {
-            Some(prefix) => {
-                let prefix = format!("{prefix}_");
-                std::env::vars()
-                    .filter_map(|(key, value)| {
-                        key.strip_prefix(&prefix)
-                            .map(|stripped| (stripped.to_uppercase(), env_value(value)))
-                    })
-                    .collect()
-            }
-            None => std::env::vars()
-                .map(|(key, value)| (key.to_uppercase(), env_value(value)))
-                .collect(),
+        let Some(prefix) = &self.prefix else {
+            return Ok(Value::Object(serde_json::Map::new()));
         };
+
+        let prefix = format!("{prefix}_");
+        let env_vars: serde_json::Map<String, Value> = std::env::vars()
+            .filter_map(|(key, value)| {
+                key.strip_prefix(&prefix)
+                    .map(|stripped| (stripped.to_uppercase(), Value::String(value)))
+            })
+            .collect();
 
         Ok(Value::Object(env_vars))
     }
@@ -275,10 +272,6 @@ fn merge_objects(
     }
 }
 
-fn env_value(value: String) -> Value {
-    serde_json::from_str(&value).unwrap_or(Value::String(value))
-}
-
 fn value_kind(value: &Value) -> &'static str {
     match value {
         Value::Null => "null",
@@ -346,8 +339,8 @@ mod tests {
         let value = EnvConfig::with_prefix("APP").load_value().unwrap();
 
         assert_eq!(value.get("ALLOWED"), Some(&Value::String("scoped".to_string())));
-        assert_eq!(value.get("PORT"), Some(&serde_json::json!(8080)));
-        assert_eq!(value.get("ENABLED"), Some(&serde_json::json!(true)));
+        assert_eq!(value.get("PORT"), Some(&Value::String("8080".to_string())));
+        assert_eq!(value.get("ENABLED"), Some(&Value::String("true".to_string())));
         assert!(value.get("APP_ALLOWED").is_none());
         assert!(value.get("OTHER_ALLOWED").is_none());
 
@@ -355,6 +348,17 @@ mod tests {
         std::env::remove_var("APP_PORT");
         std::env::remove_var("APP_ENABLED");
         std::env::remove_var("OTHER_ALLOWED");
+    }
+
+    #[test]
+    fn test_unprefixed_env_config_load_value_is_empty() {
+        std::env::set_var("UNSCOPED_SECRET", "hidden");
+
+        let value = EnvConfig::new().load_value().unwrap();
+
+        assert_eq!(value, Value::Object(serde_json::Map::new()));
+
+        std::env::remove_var("UNSCOPED_SECRET");
     }
 
     #[test]
