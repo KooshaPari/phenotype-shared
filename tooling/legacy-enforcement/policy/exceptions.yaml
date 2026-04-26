@@ -1,0 +1,20 @@
+# Legacy Tooling Anti-Pattern Exception Registry
+# Add exceptions here for repos that need temporary exemptions from policy rules
+
+schema_version: "1.0.0"
+last_updated: "2026-04-04"
+
+exceptions:
+  # Example exception template:
+  # - id: EXC-001
+  #   rule_id: LT-PY-001
+  #   repo: "some-repo"
+  #   path_glob: ".github/workflows/ci.yml"
+  #   command_regex: "pytest"
+  #   owner: "team-platform"
+  #   ticket: "TICKET-123"
+  #   rationale: "Migration in progress to uv-based workflow"
+  #   expires_at: "2026-06-01"
+  #   replacement_plan: "Update to 'uv run pytest' by end of Q2"
+
+# No active exceptions - strict enforcement in Tier 0 repos

@@ -1,0 +1,39 @@
+# Pre-commit hook configuration for Legacy Tooling Anti-Pattern Scanner
+# Add this to your repo's .pre-commit-config.yaml
+
+repos:
+  - repo: local
+    hooks:
+      - id: legacy-tooling-scan
+        name: Legacy Tooling Anti-Pattern Scanner
+        description: Enforces Phenotype Technology Adoption Philosophy per CLAUDE.md
+        entry: python3 tooling/legacy-enforcement/scanner/legacy_tooling_scanner.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        args:
+          - --repo-root
+          - .
+          - --policy
+          - tooling/legacy-enforcement/policy/rules.yaml
+          - --fail-on-severity
+          - high
+          - --report-only  # Remove this to enable blocking mode
+        verbose: true
+
+      - id: legacy-tooling-size-check
+        name: File Size Check (LOC)
+        description: Ensures files don't exceed recommended line counts
+        entry: python3 tooling/legacy-enforcement/scanner/legacy_tooling_scanner.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        args:
+          - --repo-root
+          - .
+          - --policy
+          - tooling/legacy-enforcement/policy/rules.yaml
+          - --fail-on-severity
+          - none
+          - --report-only
+        verbose: false
