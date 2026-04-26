@@ -1,0 +1,664 @@
+# Legacy Tooling Anti-Pattern Policy Registry
+# Phenotype Technology Adoption Philosophy Enforcement
+# Reference: CLAUDE.md lines 18-67
+
+schema_version: "1.0.0"
+last_updated: "2026-04-04"
+
+# Severity levels: critical, high, medium, low
+# Modes: block (fail CI), warn (report only), allow (explicit exemption required)
+
+rules:
+  # ============================================================================
+  # PYTHON - Strict: uv/ruff based, NO legacy pip/poetry/pytest direct invocation
+  # ============================================================================
+
+  - id: LT-PY-001
+    name: "Direct pytest invocation"
+    description: "Using 'python -m pytest' or bare 'pytest' instead of uv/Taskfile/CLI wrapper"
+    severity: high
+    mode: block
+    applies_to:
+      - python
+    patterns:
+      - regex: '\\bpython\\s+-m\\s+pytest\\b'
+      - regex: '^pytest\\b(?!\\.mark)'
+      - regex: '\\s+pytest\\s+(?!mark)'
+    files:
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+      - "Makefile*"
+      - "*.sh"
+      - "Taskfile*.yml"
+      - "justfile"
+    suggested_fix: "Use 'uv run pytest' or project CLI: 'python cli.py test' or 'just test'"
+    rationale: "Per CLAUDE.md: uv is primary, pip/venv are legacy escape hatches only"
+
+  - id: LT-PY-002
+    name: "pip editable install"
+    description: "Using 'pip install -e' or 'pip install --editable' for development installs"
+    severity: high
+    mode: block
+    applies_to:
+      - python
+    patterns:
+      - regex: '\\bpip\\s+install(?:\\s+--editable|\\s+-e)\\b'
+      - regex: '\\bpip3\\s+install(?:\\s+--editable|\\s+-e)\\b'
+    files:
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+      - "Makefile*"
+      - "*.sh"
+      - "pyproject.toml"
+      - "setup.py"
+    suggested_fix: "Use 'uv pip install' or add dependency to pyproject.toml with uv sync"
+    rationale: "Editable installs bypass uv lockfile; use uv's workspace/development dependency management"
+
+  - id: LT-PY-003
+    name: "Poetry usage"
+    description: "Using poetry for dependency management or commands"
+    severity: high
+    mode: block
+    applies_to:
+      - python
+    patterns:
+      - regex: '\\bpoetry\\s+(?:install|run|build|publish|lock|update|add|remove)\\b'
+    files:
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+      - "Makefile*"
+      - "*.sh"
+      - "pyproject.toml"
+    suggested_fix: "Migrate to uv: replace 'poetry install' with 'uv sync', 'poetry run' with 'uv run'"
+    rationale: "Per CLAUDE.md: uv (Rust-based) replaces pip/venv/poetry completely, not side-by-side"
+
+  - id: LT-PY-004
+    name: "Pipenv usage"
+    description: "Using pipenv for dependency management"
+    severity: high
+    mode: block
+    applies_to:
+      - python
+    patterns:
+      - regex: '\\bpipenv\\b'
+    files:
+      - "*"
+    suggested_fix: "Migrate to uv: remove Pipfile/Pipfile.lock, use pyproject.toml with uv"
+    rationale: "Pipenv is legacy; uv provides superior performance and lockfile management"
+
+  - id: LT-PY-005
+    name: "Direct ruff/mypy/black invocation"
+    description: "Calling ruff, mypy, or black directly instead of through uv/CLI"
+    severity: medium
+    mode: warn
+    applies_to:
+      - python
+    patterns:
+      - regex: '^\\s*ruff\\s+(?:check|format)'
+      - regex: '^\\s*mypy\\b'
+      - regex: '^\\s*black\\b'
+      - regex: '\\bpython\\s+-m\\s+(?:ruff|mypy|black)\\b'
+    files:
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+      - "Makefile*"
+      - "*.sh"
+    suggested_fix: "Use 'uv run ruff check' or project CLI with standardized lint command"
+    rationale: "Direct invocation bypasses project-level configuration; use uv to ensure consistent versions"
+
+  - id: LT-PY-006
+    name: "setup.py direct execution"
+    description: "Running setup.py directly for install/build"
+    severity: critical
+    mode: block
+    applies_to:
+      - python
+    patterns:
+      - regex: '\\bpython\\s+setup\\.py\\s+(?:install|build|sdist|bdist_wheel)\\b'
+      - regex: '^\\s*setup\\.py\\s+(?:install|build)'
+    files:
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+      - "Makefile*"
+      - "*.sh"
+    suggested_fix: "Use 'uv build' or 'python -m build' with pyproject.toml (PEP 517)"
+    rationale: "setup.py is deprecated; modern Python uses pyproject.toml with uv/build"
+
+  # ============================================================================
+  # JAVASCRIPT/TYPESCRIPT - Strict: Bun/TSGo primary, NO mixed package managers
+  # ============================================================================
+
+  - id: LT-JS-001
+    name: "npm ci in CI"
+    description: "Using 'npm ci' in GitHub Actions or scripts when Bun is primary"
+    severity: high
+    mode: block
+    applies_to:
+      - javascript
+      - typescript
+    patterns:
+      - regex: '\\bnpm\\s+ci\\b'
+      - regex: '\\bnpm\\s+install\\b'
+    files:
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+      - "*.sh"
+    suggested_fix: "Use 'bun install' or 'bun ci' (bun.lockb-based)"
+    rationale: "Per CLAUDE.md: Bun is already primary over Node.js; npm is legacy escape hatch"
+
+  - id: LT-JS-002
+    name: "npm run command"
+    description: "Using 'npm run' for script execution"
+    severity: medium
+    mode: warn
+    applies_to:
+      - javascript
+      - typescript
+    patterns:
+      - regex: '\\bnpm\\s+run\\s+\\w+'
+    files:
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+      - "Makefile*"
+      - "*.sh"
+    suggested_fix: "Use 'bun run <script>' or just 'bun <script>'"
+    rationale: "npm is legacy escape hatch; Bun provides 2x faster execution"
+
+  - id: LT-JS-003
+    name: "yarn invocation"
+    description: "Using yarn for package management or scripts"
+    severity: high
+    mode: block
+    applies_to:
+      - javascript
+      - typescript
+    patterns:
+      - regex: '\\byarn\\s+(?:install|run|test|build|add|remove|upgrade)\\b'
+    files:
+      - "*"
+    suggested_fix: "Remove yarn.lock, use bun.lockb with 'bun install'"
+    rationale: "Yarn is legacy; Bun is the aggressive target per CLAUDE.md"
+
+  - id: LT-JS-004
+    name: "pnpm usage"
+    description: "Using pnpm for package management"
+    severity: high
+    mode: block
+    applies_to:
+      - javascript
+      - typescript
+    patterns:
+      - regex: '\\bpnpm\\s+(?:install|run|test|build|add|remove)\\b'
+    files:
+      - "*"
+    suggested_fix: "Remove pnpm-lock.yaml, use bun.lockb with 'bun install'"
+    rationale: "pnpm is legacy; Bun is the aggressive target per CLAUDE.md"
+
+  - id: LT-JS-005
+    name: "TypeScript 6.x (tsc) usage"
+    description: "Using legacy TypeScript compiler when TSGo/TS7 is available"
+    severity: medium
+    mode: warn
+    applies_to:
+      - typescript
+    patterns:
+      - regex: '\\btsc\\s+(?:--project|-p)'
+      - regex: '\\bnpx\\s+tsc\\b'
+    files:
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+      - "package.json"
+    suggested_fix: "Use TSGo ('tsgo') for type checking; keep 'tsc --noEmit' only as :legacy escape hatch"
+    rationale: "Per CLAUDE.md: tsgo (TypeScript 7 native Go-based) is primary, tsc is legacy escape hatch"
+
+  - id: LT-JS-006
+    name: "Jest test runner"
+    description: "Using Jest for testing when Bun/Vitest are primary"
+    severity: medium
+    mode: warn
+    applies_to:
+      - javascript
+      - typescript
+    patterns:
+      - regex: '\\bjest\\b'
+      - regex: '\\bnpx\\s+jest\\b'
+    files:
+      - "package.json"
+      - "jest.config.*"
+      - ".github/workflows/*.yml"
+    suggested_fix: "Use Bun's built-in test runner ('bun test') or Vitest; mark Jest config as :legacy"
+    rationale: "Per CLAUDE.md: Jest is legacy escape hatch; Bun test is primary"
+
+  - id: LT-JS-007
+    name: "Node.js runtime invocation"
+    description: "Using node command directly when Bun is primary"
+    severity: low
+    mode: warn
+    applies_to:
+      - javascript
+      - typescript
+    patterns:
+      - regex: '^\\s*node\\s+'
+      - regex: '\\bnode\\s+(?:index\\.js|server\\.js|dist/)'
+    files:
+      - "Dockerfile"
+      - "*.sh"
+      - "Makefile*"
+    suggested_fix: "Use 'bun run' for execution; 'node' is :legacy escape hatch per CLAUDE.md"
+    rationale: "Node.js is legacy escape hatch; Bun is primary runtime per CLAUDE.md"
+
+  # ============================================================================
+  # RUST - Nightly aggressive adoption, no blanket bans on cargo
+  # ============================================================================
+
+  - id: LT-RS-001
+    name: "Stable Rust toolchain enforcement"
+    description: "Not using nightly or edition 2024 when available"
+    severity: low
+    mode: warn
+    applies_to:
+      - rust
+    patterns:
+      - regex: 'channel\\s*=\\s*"stable"'
+      - regex: 'edition\\s*=\\s*"2021"'
+    files:
+      - "rust-toolchain.toml"
+      - "Cargo.toml"
+    suggested_fix: 'Use ''channel = "nightly"'' and ''edition = "2024"'' for aggressive adoption'
+    rationale: "Per CLAUDE.md: Rust Edition 2024 should be adopted immediately when available"
+
+  - id: LT-RS-002
+    name: "Legacy async patterns"
+    description: "Using Pin<Box<dyn Future>> instead of async fn in traits"
+    severity: medium
+    mode: warn
+    applies_to:
+      - rust
+    patterns:
+      - regex: 'Pin<Box<dyn Future'
+      - regex: 'Box::pin'
+    files:
+      - "*.rs"
+    suggested_fix: "Use 'async fn' in traits (stable since Rust 1.75) with nightly edition 2024"
+    rationale: "Per CLAUDE.md: async fn in traits replaces manual Pin<Box<dyn Future>>"
+
+  # ============================================================================
+  # GO - Latest stable with generics
+  # ============================================================================
+
+  - id: LT-GO-001
+    name: "Go version below 1.24"
+    description: "Using Go version older than 1.24"
+    severity: medium
+    mode: warn
+    applies_to:
+      - go
+    patterns:
+      - regex: 'go\\s+1\\.(?:[0-9]|1[0-9]|2[0-3])\\b'
+    files:
+      - "go.mod"
+    suggested_fix: "Upgrade to go 1.24+ for latest generics, slog, slices packages"
+    rationale: "Per CLAUDE.md: Go 1.24+ is aggressive target for latest features"
+
+  # ============================================================================
+  # GENERAL - Build tools and wrappers
+  # ============================================================================
+
+  - id: LT-GEN-001
+    name: "Makefile target invocation"
+    description: "Using make for build orchestration"
+    severity: high
+    mode: block
+    applies_to:
+      - general
+    patterns:
+      - regex: '(?:^|\\s)make\\s+(?:test|build|lint|check|ci|install|clean)[\\s&;|]'
+      - regex: '^\\s*make\\s+\\w+$'
+    files:
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+      - "*.sh"
+    suggested_fix: "Use Taskfile.yml (go-task), justfile, or project CLI instead of Make"
+    rationale: "Make is legacy; use modern task runners (Task, just) with better cross-platform support"
+
+  - id: LT-GEN-002
+    name: "Hand-rolled shell script wrappers"
+    description: "Custom ci.sh/build.sh/test.sh scripts calling banned primitives"
+    severity: medium
+    mode: warn
+    applies_to:
+      - general
+    patterns:
+      - regex: '(?:^|/)(?:ci|build|test|deploy|lint)\\.sh$'
+    files:
+      - "*.sh"
+    suggested_fix: "Migrate scripts to Taskfile.yml, justfile, or uv/bun-based CLI commands"
+    rationale: "Hand-rolled scripts are anti-pattern; use standardized task runners"
+
+  - id: LT-GEN-003
+    name: "Direct package manager mixing"
+    description: "Repo declares one package manager but uses another in CI"
+    severity: high
+    mode: block
+    applies_to:
+      - general
+    patterns:
+      - regex: '(npm|yarn|pnpm).*bun\\.lockb'
+      - regex: 'bun.*(?:package-lock\\.json|yarn\\.lock|pnpm-lock)'
+    files:
+      - ".github/workflows/*.yml"
+      - "package.json"
+    suggested_fix: "Align package manager: remove conflicting lockfiles, use single manager throughout"
+    rationale: "Mixed package managers cause lock drift and CI inconsistency"
+
+  - id: LT-GEN-004
+    name: "requirements.txt usage"
+    description: "Using requirements.txt for Python dependencies"
+    severity: medium
+    mode: warn
+    applies_to:
+      - python
+    patterns:
+      - regex: 'requirements(?:-dev|-test|-prod)?\\.txt$'
+      - regex: '-r\\s+requirements'
+    files:
+      - "*.txt"
+      - ".github/workflows/*.yml"
+    suggested_fix: "Migrate to pyproject.toml with uv.lock for reproducible resolution"
+    rationale: "requirements.txt is legacy; uv.lock provides deterministic, cross-platform resolution"
+
+  - id: LT-GEN-005
+    name: "Large file/module size"
+    description: "Files exceeding maximum recommended lines of code"
+    severity: medium
+    mode: warn
+    applies_to:
+      - python
+      - javascript
+      - typescript
+      - rust
+      - go
+    patterns: []
+    files:
+      - "*.py"
+      - "*.js"
+      - "*.ts"
+      - "*.tsx"
+      - "*.rs"
+      - "*.go"
+    thresholds:
+      python: 350
+      javascript: 350
+      typescript: 350
+      rust: 400
+      go: 400
+    suggested_fix: "Refactor large files into modules; target ≤350 lines per Python/JS file, ≤400 for Rust/Go"
+    rationale: "Per AGENTS.md: target ≤350 lines per file for maintainability"
+
+  # ============================================================================
+  # DOCKER - Base images and build practices
+  # ============================================================================
+
+  - id: LT-DKR-001
+    name: "Legacy Debian/Ubuntu base image"
+    description: "Using full Debian/Ubuntu images instead of Alpine or Distroless"
+    severity: medium
+    mode: warn
+    applies_to:
+      - docker
+    patterns:
+      - regex: 'FROM\s+(?:ubuntu|debian):'
+      - regex: 'FROM\s+python:\d+\.(?:[0-9]|1[0-9]|2[0-1])'
+    files:
+      - "Dockerfile"
+      - "Dockerfile.*"
+    suggested_fix: "Use Alpine (python:3.12-alpine) or Google's Distroless for smaller, more secure images"
+    rationale: "Alpine/Distroless images are smaller, have fewer CVEs, and faster build times"
+
+  - id: LT-DKR-002
+    name: "apt-get without cleanup"
+    description: "Running apt-get install without removing cache"
+    severity: medium
+    mode: warn
+    applies_to:
+      - docker
+    patterns:
+      - regex: 'apt-get\s+install(?!.*rm\s+-rf\s+/var/lib/apt)'
+      - regex: 'apt-get\s+update(?!.*&&\s*rm)'
+    files:
+      - "Dockerfile"
+      - "Dockerfile.*"
+    suggested_fix: "Chain cleanup: 'apt-get update && apt-get install -y ... && rm -rf /var/lib/apt/lists/*'"
+    rationale: "Layer bloat from package caches increases image size and security surface"
+
+  - id: LT-DKR-003
+    name: "Latest tag usage"
+    description: "Using ':latest' tag for base images"
+    severity: high
+    mode: block
+    applies_to:
+      - docker
+    patterns:
+      - regex: 'FROM\s+\S+:latest\b'
+    files:
+      - "Dockerfile"
+      - "Dockerfile.*"
+    suggested_fix: "Pin to specific version: 'FROM node:20-alpine' instead of 'FROM node:latest'"
+    rationale: "Latest tag causes non-reproducible builds; pin versions for deterministic CI/CD"
+
+  - id: LT-DKR-004
+    name: "Docker compose v1 (docker-compose)"
+    description: "Using legacy docker-compose command instead of 'docker compose'"
+    severity: medium
+    mode: warn
+    applies_to:
+      - docker
+    patterns:
+      - regex: '\bdocker-compose\b'
+    files:
+      - "*.sh"
+      - "Makefile*"
+      - ".github/workflows/*.yml"
+    suggested_fix: "Use 'docker compose' (Compose V2, built into Docker CLI) instead of 'docker-compose'"
+    rationale: "docker-compose v1 is EOL; V2 is built into Docker CLI with better performance"
+
+  # ============================================================================
+  # GITHUB ACTIONS - Workflow best practices
+  # ============================================================================
+
+  - id: LT-GHA-001
+    name: "Unpinned action versions"
+    description: "Using @v1, @v2, or @main instead of commit SHA or specific version"
+    severity: high
+    mode: block
+    applies_to:
+      - github_actions
+    patterns:
+      - regex: 'uses:\s+\S+@v[0-9]+\b(?!\.)'
+      - regex: 'uses:\s+\S+@main\b'
+      - regex: 'uses:\s+\S+@master\b'
+    files:
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+    suggested_fix: "Pin to commit SHA: 'uses: actions/checkout@a81bb...' or full version 'uses: actions/checkout@v4.1.0'"
+    rationale: "Unpinned versions allow supply chain attacks; pin to SHA for immutable, auditable builds"
+
+  - id: LT-GHA-002
+    name: "Workflow without timeout"
+    description: "GitHub Actions workflow jobs without timeout-minutes specified"
+    severity: medium
+    mode: warn
+    applies_to:
+      - github_actions
+    patterns:
+      - regex: '^\s*runs-on:\s*\S+$'
+    negative_patterns:
+      - regex: 'timeout-minutes:'
+    files:
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+    suggested_fix: "Add 'timeout-minutes: 15' (or appropriate value) to every job to prevent hung runners"
+    rationale: "Default 6-hour timeout wastes CI resources on hung jobs; explicit timeouts required"
+
+  - id: LT-GHA-003
+    name: "Direct secret logging risk"
+    description: "Echoing or printing secrets in workflow steps"
+    severity: critical
+    mode: block
+    applies_to:
+      - github_actions
+    patterns:
+      - regex: 'echo\s+.*\$\{\{\s*secrets\.'
+      - regex: 'echo\s+.*\$[A-Z_]*(?:TOKEN|KEY|SECRET|PASSWORD)'
+      - regex: 'printenv\s+.*(?:TOKEN|KEY|SECRET)'
+    files:
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+    suggested_fix: "Never echo secrets; use masking with ::add-mask:: before use"
+    rationale: "Secrets in logs are security incidents; automatic detection prevents exposure"
+
+  - id: LT-GHA-004
+    name: "Deprecated action versions"
+    description: "Using deprecated or archived GitHub Actions"
+    severity: medium
+    mode: warn
+    applies_to:
+      - github_actions
+    patterns:
+      - regex: 'uses:\s+actions/setup-node@v1\b'
+      - regex: 'uses:\s+actions/checkout@v2\b'
+      - regex: 'uses:\s+actions/cache@v[12]\b'
+    files:
+      - ".github/workflows/*.yml"
+    suggested_fix: "Upgrade to latest major version: actions/checkout@v4, actions/setup-node@v4"
+    rationale: "Old action versions use deprecated Node.js 12/16 and may have security vulnerabilities"
+
+  # ============================================================================
+  # DEPENDENCY MANAGEMENT - Lockfiles and security
+  # ============================================================================
+
+  - id: LT-DEP-001
+    name: "Missing lockfile"
+    description: "Repository lacks dependency lockfile for reproducible builds"
+    severity: high
+    mode: warn
+    applies_to:
+      - python
+      - javascript
+      - rust
+    patterns: []
+    required_files:
+      python:
+        - "uv.lock"
+        - "poetry.lock"
+        - "Pipfile.lock"
+      javascript:
+        - "bun.lockb"
+        - "package-lock.json"
+        - "yarn.lock"
+        - "pnpm-lock.yaml"
+      rust:
+        - "Cargo.lock"
+    files:
+      - "pyproject.toml"
+      - "package.json"
+      - "Cargo.toml"
+    suggested_fix: "Generate lockfile: 'uv lock' for Python, 'bun install' for JS, 'cargo generate-lockfile' for Rust"
+    rationale: "Lockfiles ensure reproducible builds; without them, CI may install different dependency versions"
+
+  - id: LT-DEP-002
+    name: "Multiple lockfiles"
+    description: "Repository has multiple package manager lockfiles (confusion)"
+    severity: medium
+    mode: warn
+    applies_to:
+      - javascript
+    patterns:
+      - multi_lockfiles:
+          files:
+            - "bun.lockb"
+            - "package-lock.json"
+            - "yarn.lock"
+            - "pnpm-lock.yaml"
+          min_count: 2
+    files:
+      - "*"
+    suggested_fix: "Remove conflicting lockfiles; keep only the canonical one (bun.lockb for Bun primary)"
+    rationale: "Multiple lockfiles indicate package manager confusion; standardize on one"
+
+  - id: LT-DEP-003
+    name: "Lockfile out of date"
+    description: "Lockfile is older than manifest file (potential drift)"
+    severity: medium
+    mode: warn
+    applies_to:
+      - python
+      - javascript
+      - rust
+    patterns: []
+    files:
+      - "uv.lock"
+      - "poetry.lock"
+      - "bun.lockb"
+      - "package-lock.json"
+      - "Cargo.lock"
+    suggested_fix: "Regenerate lockfile: 'uv lock' or 'bun install --frozen-lockfile' or 'cargo update"
+    rationale: "Stale lockfiles may miss security updates or cause resolution conflicts"
+
+# ============================================================================
+# Maturity Tiers - Which repos get which enforcement level
+# ============================================================================
+
+maturity_tiers:
+  tier_0_strict:
+    repos:
+      - AgilePlus
+      - thegent
+      - Tracera
+      - phenoSDK
+      - heliosCLI
+    enforcement: block
+    description: "Aggressive adoption repos - all block rules enforced"
+
+  tier_1_standard:
+    repos: []
+    enforcement: warn
+    description: "Standard repos - warn on violations, allow exceptions"
+
+  tier_2_legacy:
+    repos: []
+    enforcement: allow
+    description: "Legacy repos - report only, migration path required"
+
+# ============================================================================
+# Exception Policy
+# ============================================================================
+
+exception_policy:
+  required_fields:
+    - id
+    - rule_id
+    - repo
+    - owner
+    - ticket
+    - rationale
+    - expires_at
+    - replacement_plan
+
+  max_duration_days: 90
+  approval_required: true
+  review_team: "platform-engineering"
+
+# ============================================================================
+# Output Configuration
+# ============================================================================
+
+output:
+  formats:
+    - json
+    - markdown
+    - sarif
+  artifacts:
+    - legacy-tooling-report.json
+    - legacy-tooling-report.md
+    - legacy-tooling-report.sarif

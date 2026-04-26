@@ -1,0 +1,214 @@
+name: Reusable Legacy Tooling Gate
+# Enforces Phenotype Technology Adoption Philosophy per CLAUDE.md
+# Blocks legacy tooling: makefiles, non-uv Python, non-Bun/TSGo JS, npm/yarn/pnpm, etc.
+
+on:
+  workflow_call:
+    inputs:
+      repo-root:
+        description: 'Path to repository root'
+        required: false
+        type: string
+        default: '.'
+      policy-path:
+        description: 'Path to policy rules YAML'
+        required: false
+        type: string
+        default: 'tooling/legacy-enforcement/policy/rules.yaml'
+      exceptions-path:
+        description: 'Path to exceptions YAML'
+        required: false
+        type: string
+        default: ''
+      fail-on-severity:
+        description: 'Minimum severity to fail (none, low, medium, high, critical)'
+        required: false
+        type: string
+        default: 'high'
+      report-only:
+        description: 'Report only, do not fail'
+        required: false
+        type: boolean
+        default: false
+      upload-artifacts:
+        description: 'Upload scan artifacts'
+        required: false
+        type: boolean
+        default: true
+    outputs:
+      total-violations:
+        description: 'Total number of violations found'
+        value: ${{ jobs.legacy-tooling-scan.outputs.total-violations }}
+      critical-count:
+        description: 'Critical severity violations'
+        value: ${{ jobs.legacy-tooling-scan.outputs.critical-count }}
+      high-count:
+        description: 'High severity violations'
+        value: ${{ jobs.legacy-tooling-scan.outputs.high-count }}
+
+jobs:
+  legacy-tooling-scan:
+    name: Legacy Tooling Anti-Pattern Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write  # Required for SARIF upload
+    outputs:
+      total-violations: ${{ steps.scan.outputs.total-violations }}
+      critical-count: ${{ steps.scan.outputs.critical-count }}
+      high-count: ${{ steps.scan.outputs.high-count }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+
+      - name: Checkout tooling repository (for shared policies)
+        if: ${{ !contains(inputs.policy-path, '/') }}
+        uses: actions/checkout@v4
+        with:
+          repository: phenotype/repos
+          path: .tooling
+          sparse-checkout: |
+            tooling/legacy-enforcement
+
+      - name: Determine policy path
+        id: policy
+        run: |
+          if [ -f "${{ inputs.policy-path }}" ]; then
+            echo "path=${{ inputs.policy-path }}" >> $GITHUB_OUTPUT
+          elif [ -f ".tooling/tooling/legacy-enforcement/policy/rules.yaml" ]; then
+            echo "path=.tooling/tooling/legacy-enforcement/policy/rules.yaml" >> $GITHUB_OUTPUT
+          else
+            echo "No policy found, using default"
+            echo "path=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run legacy tooling scanner
+        id: scan
+        run: |
+          # Determine scanner path
+          if [ -f "tooling/legacy-enforcement/scanner/legacy_tooling_scanner.py" ]; then
+            SCANNER="tooling/legacy-enforcement/scanner/legacy_tooling_scanner.py"
+          elif [ -f ".tooling/tooling/legacy-enforcement/scanner/legacy_tooling_scanner.py" ]; then
+            SCANNER=".tooling/tooling/legacy-enforcement/scanner/legacy_tooling_scanner.py"
+          else
+            echo "Error: Scanner not found"
+            exit 1
+          fi
+
+          # Build command
+          CMD="python3 $SCANNER --repo-root ${{ inputs.repo-root }}"
+
+          if [ -n "${{ steps.policy.outputs.path }}" ]; then
+            CMD="$CMD --policy ${{ steps.policy.outputs.path }}"
+          fi
+
+          if [ -n "${{ inputs.exceptions-path }}" ]; then
+            CMD="$CMD --exceptions ${{ inputs.exceptions-path }}"
+          fi
+
+          CMD="$CMD --fail-on-severity ${{ inputs.fail-on-severity }}"
+          CMD="$CMD --output-json legacy-tooling-report.json"
+          CMD="$CMD --output-md legacy-tooling-report.md"
+          CMD="$CMD --output-sarif legacy-tooling-report.sarif"
+
+          if [ "${{ inputs.report-only }}" = "true" ]; then
+            CMD="$CMD --report-only"
+          fi
+
+          echo "Running: $CMD"
+          $CMD || EXIT_CODE=$?
+
+          # Parse results for outputs
+          if [ -f "legacy-tooling-report.json" ]; then
+            TOTAL=$(python3 -c "import json; d=json.load(open('legacy-tooling-report.json')); print(sum(d['totals'].values()))")
+            CRITICAL=$(python3 -c "import json; d=json.load(open('legacy-tooling-report.json')); print(d['totals'].get('critical', 0))")
+            HIGH=$(python3 -c "import json; d=json.load(open('legacy-tooling-report.json')); print(d['totals'].get('high', 0))")
+            echo "total-violations=$TOTAL" >> $GITHUB_OUTPUT
+            echo "critical-count=$CRITICAL" >> $GITHUB_OUTPUT
+            echo "high-count=$HIGH" >> $GITHUB_OUTPUT
+          else
+            echo "total-violations=0" >> $GITHUB_OUTPUT
+            echo "critical-count=0" >> $GITHUB_OUTPUT
+            echo "high-count=0" >> $GITHUB_OUTPUT
+          fi
+
+          # Exit with scanner exit code unless report-only
+          if [ "${{ inputs.report-only }}" != "true" ] && [ -n "$EXIT_CODE" ] && [ "$EXIT_CODE" -ne 0 ]; then
+            exit $EXIT_CODE
+          fi
+        shell: bash
+
+      - name: Upload scan artifacts
+        if: ${{ inputs.upload-artifacts }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-tooling-reports
+          path: |
+            legacy-tooling-report.json
+            legacy-tooling-report.md
+            legacy-tooling-report.sarif
+          if-no-files-found: warn
+
+      - name: Upload SARIF to GitHub Security
+        if: ${{ inputs.upload-artifacts && github.event_name == 'pull_request' }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: legacy-tooling-report.sarif
+          category: legacy-tooling-gate
+
+      - name: Comment PR with results
+        if: ${{ github.event_name == 'pull_request' && inputs.report-only == false }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let report = { totals: { critical: 0, high: 0, medium: 0, low: 0 }, findings: [] };
+            try {
+              report = JSON.parse(fs.readFileSync('legacy-tooling-report.json', 'utf8'));
+            } catch (e) {
+              console.log('No report found');
+            }
+
+            const totals = report.totals;
+            const total = Object.values(totals).reduce((a, b) => a + b, 0);
+
+            let body = `## 🔍 Legacy Tooling Anti-Pattern Scan\n\n`;
+            body += `**Total Violations:** ${total}\n\n`;
+            body += `- 🔴 Critical: ${totals.critical || 0}\n`;
+            body += `- 🟠 High: ${totals.high || 0}\n`;
+            body += `- 🟡 Medium: ${totals.medium || 0}\n`;
+            body += `- 🔵 Low: ${totals.low || 0}\n\n`;
+
+            if (total > 0) {
+              body += `### Top Findings\n\n`;
+              const top = report.findings
+                .sort((a, b) => ['critical', 'high', 'medium', 'low'].indexOf(a.severity) - ['critical', 'high', 'medium', 'low'].indexOf(b.severity))
+                .slice(0, 5);
+
+              for (const f of top) {
+                body += `- **[${f.severity.toUpperCase()}]** \`${f.file}:${f.line}\` - ${f.rule_id}\n`;
+              }
+
+              body += `\n📄 [View Full Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n`;
+            } else {
+              body += `✅ No legacy tooling anti-patterns detected!\n`;
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
