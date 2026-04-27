@@ -8,7 +8,7 @@ name: reusable-tag-automation
 # Callers invoke with:
 #   jobs:
 #     tag:
-#       uses: KooshaPari/phenoShared/.github/workflows/reusable/tag-automation.yml@main
+#       uses: KooshaPari/phenoShared/.github/workflows/tag-automation.yml@main@main
 
 permissions:
   contents: write
