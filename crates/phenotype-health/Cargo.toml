@@ -4,7 +4,6 @@ version = "0.2.0"
 description = "Unified health check abstraction for service health, readiness, and liveness probes"
 edition.workspace = true
 license.workspace = true
-description = "Unified health check abstraction for service health, readiness, and liveness probes"
 repository.workspace = true
 
 [lib]

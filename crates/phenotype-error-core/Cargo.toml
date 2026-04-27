@@ -4,7 +4,6 @@ version = "0.2.0"
 description = "Canonical error types and recovery strategies for the Phenotype ecosystem"
 edition.workspace = true
 license.workspace = true
-description = "Canonical error types and recovery strategies for the Phenotype ecosystem"
 repository.workspace = true
 
 [lib]
