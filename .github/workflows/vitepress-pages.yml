@@ -1,0 +1,72 @@
+name: Reusable VitePress Pages Deploy
+
+on:
+  workflow_call:
+    inputs:
+      concurrency_group:
+        description: 'Concurrency group name (must be unique per repo to avoid collisions)'
+        required: true
+        type: string
+      docs_dir:
+        description: 'Working directory containing the VitePress site'
+        required: false
+        type: string
+        default: 'docs'
+      build_script:
+        description: 'Bun script to run for building the site'
+        required: false
+        type: string
+        default: 'docs:build'
+      dist_subpath:
+        description: 'Path to build output, relative to docs_dir'
+        required: false
+        type: string
+        default: '.vitepress/dist'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: ${{ inputs.concurrency_group }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Install dependencies
+        working-directory: ${{ inputs.docs_dir }}
+        run: bun install
+
+      - name: Build VitePress site
+        working-directory: ${{ inputs.docs_dir }}
+        run: bun run ${{ inputs.build_script }}
+        env:
+          GITHUB_PAGES: "true"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ${{ inputs.docs_dir }}/${{ inputs.dist_subpath }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
