@@ -45,4 +45,4 @@ anyhow = "1.0"
 tokio = { version = "1.40", features = ["full"] }
 tracing = "0.1"
 tracing-opentelemetry = "0.32"
-validator = "0.19"
+validator = "0.20"
