@@ -6,7 +6,7 @@ name: reusable-self-merge-gate
 # Callers invoke with:
 #   jobs:
 #     gate:
-#       uses: KooshaPari/phenoShared/.github/workflows/self-merge-gate.yml@main@main
+#       uses: KooshaPari/phenoShared/.github/workflows/self-merge-gate.yml@main
 
 permissions:
   contents: read
