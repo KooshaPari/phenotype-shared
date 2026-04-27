@@ -1,0 +1,63 @@
+name: Reusable CI (Rust)
+
+# Reusable workflow: Rust CI (build, test, clippy) + optional governance validation.
+# Called by consumers via `uses: KooshaPari/phenoShared/.github/workflows/ci.yml@main`.
+
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      rust-versions:
+        description: 'JSON array of Rust toolchain versions for matrix (e.g. ["stable","1.70"])'
+        type: string
+        required: false
+        default: '["stable"]'
+      path:
+        description: 'Working directory (for multi-workspace repos)'
+        type: string
+        required: false
+        default: '.'
+      clippy-args:
+        description: 'Extra args to clippy (appended after --)'
+        type: string
+        required: false
+        default: '-D warnings'
+      run-governance:
+        description: 'Also call phenotypeActions validate-governance workflow'
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rust-version: ${{ fromJSON(inputs.rust-versions) }}
+    defaults:
+      run:
+        working-directory: ${{ inputs.path }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust-version }}
+          components: clippy
+
+      - name: Build
+        run: cargo build --verbose
+
+      - name: Run tests
+        run: cargo test --verbose
+
+      - name: Run clippy
+        run: cargo clippy -- ${{ inputs.clippy-args }}
+
+  phenotype-validate:
+    if: ${{ inputs.run-governance }}
+    uses: KooshaPari/phenotypeActions/.github/workflows/validate-governance.yml@main
