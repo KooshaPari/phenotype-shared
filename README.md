@@ -7,6 +7,12 @@
 
 # phenotype-shared
 
+[![Build](https://img.shields.io/github/actions/workflow/status/KooshaPari/phenoShared/ci.yml?branch=main&label=build)](https://github.com/KooshaPari/phenoShared/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/KooshaPari/phenoShared?include_prereleases&sort=semver)](https://github.com/KooshaPari/phenoShared/releases)
+[![License](https://img.shields.io/github/license/KooshaPari/phenoShared)](LICENSE)
+[![Phenotype](https://img.shields.io/badge/Phenotype-org-blueviolet)](https://github.com/KooshaPari)
+
+
 **Status:** stable
 
 Rust infrastructure toolkit extracted from the Phenotype ecosystem. The workspace now provides shared domain, application, port, and infrastructure crates that support hexagonal and clean architecture across the broader polyrepo.
