@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::code::ErrorCode;
-use crate::layered::ApiError;
+use crate::layered::{ApiError, DomainError, RepositoryError};
 
 /// Wire-format error envelope suitable for JSON APIs, logs, and RPC payloads.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -44,7 +44,28 @@ impl ErrorEnvelope {
 
 impl From<&ApiError> for ErrorEnvelope {
     fn from(err: &ApiError) -> Self {
-        Self::new(err.error_code(), err.to_string()).with_retryable(err.is_retryable())
+        let envelope = match err {
+            ApiError::NotFound { resource, id } => {
+                Self::new(err.error_code(), format!("{resource} {id} not found")).with_details(
+                    serde_json::json!({
+                        "resource": resource,
+                        "id": id,
+                    }),
+                )
+            }
+            ApiError::Domain(DomainError::NotFound { entity, id })
+            | ApiError::Repository(RepositoryError::NotFound { entity, id }) => {
+                Self::new(err.error_code(), format!("{entity} {id} not found")).with_details(
+                    serde_json::json!({
+                        "entity": entity,
+                        "id": id,
+                    }),
+                )
+            }
+            _ => Self::new(err.error_code(), err.to_string()),
+        };
+
+        envelope.with_retryable(err.is_retryable())
     }
 }
 
@@ -68,6 +89,16 @@ mod tests {
             .with_details(json!({"field": "lane.name"}))
             .with_retryable(false);
         let fixture = include_str!("../../../contracts/errors/fixtures/validation-error.json");
+        let fixture_json: Value = serde_json::from_str(fixture).unwrap();
+        let envelope_json = serde_json::to_value(envelope).unwrap();
+        assert_eq!(envelope_json, fixture_json);
+    }
+
+    #[test]
+    fn error_envelope_from_not_found_api_error_matches_fixture() {
+        let api_err = ApiError::NotFound { resource: "project".into(), id: "42".into() };
+        let envelope = ErrorEnvelope::from(&api_err);
+        let fixture = include_str!("../../../contracts/errors/fixtures/not-found.json");
         let fixture_json: Value = serde_json::from_str(fixture).unwrap();
         let envelope_json = serde_json::to_value(envelope).unwrap();
         assert_eq!(envelope_json, fixture_json);

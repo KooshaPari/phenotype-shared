@@ -221,8 +221,8 @@ This PRD describes **legacy-enforcement**, a policy scanner that enforces the Ph
 
 | Question | Owner | Status |
 |----------|-------|--------|
-| Should we auto-create exception tickets? | TBD | Open |
-| How to handle forks of Phenotype repos? | TBD | Open |
-| Should LT-RS-001/Rust nightly be block mode? | TBD | Open |
-| How to measure migration velocity? | TBD | Open |
-| Should we support `--fix` auto-correction? | TBD | Future |
+| Should we auto-create exception tickets? | Unassigned | Open |
+| How to handle forks of Phenotype repos? | Unassigned | Open |
+| Should LT-RS-001/Rust nightly be block mode? | Unassigned | Open |
+| How to measure migration velocity? | Unassigned | Open |
+| Should we support `--fix` auto-correction? | Unassigned | Future |

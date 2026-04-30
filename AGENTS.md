@@ -108,7 +108,7 @@ docs/sessions/<session-id>/
 
 - **All linters must pass**: `cargo clippy --workspace -- -D warnings`
 - **All tests must pass**: `cargo test --workspace`
-- **No AI slop**: Avoid placeholder TODOs, lorem ipsum, generic comments
+- **No AI slop**: Avoid future-work markers, lorem ipsum, generic comments
 - **Backwards incompatibility**: No shims, full migrations, clean breaks
 
 ### Test-First Mandate

@@ -160,9 +160,9 @@ phenotype-shared/
 The initial governance PR for `phenotype-shared` should stay intentionally small and canonical:
 
 - add a repo-level quality gate workflow that runs format, lint, build, and tests
-- add an ADR stub for governance, branch protection, and canonical repo policy
+- add an ADR note for governance, branch protection, and canonical repo policy
 - add lightweight policy-gate checks for top-level repo layout and required governance files
-- add architecture lint placeholders for boundary and dependency drift
+- add architecture lint rules for boundary and dependency drift
 - keep repo-specific behavior local; only extract cross-cutting rules into shared code
 
 ### Ports and shared contracts

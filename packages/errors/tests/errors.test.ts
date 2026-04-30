@@ -54,4 +54,18 @@ describe("HeliosAppError", () => {
       fatal: false,
     });
   });
+
+  it("should serialize to the shared not-found fixture", () => {
+    const error = new HeliosAppError(ErrorCode.NOT_FOUND, "project 42 not found", {
+      details: { resource: "project", id: "42" },
+      retryable: false,
+    });
+    const fixture = JSON.parse(
+      readFileSync(join(contractRoot, "fixtures/not-found.json"), "utf8"),
+    );
+    expect(error.toJSON()).toEqual({
+      ...fixture,
+      fatal: false,
+    });
+  });
 });

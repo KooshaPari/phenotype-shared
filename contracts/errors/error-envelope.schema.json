@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://phenotype.dev/contracts/errors/error-envelope.schema.json",
+  "$id": "https://kooshapari.com/contracts/errors/error-envelope.schema.json",
   "title": "Phenotype Error Envelope",
   "type": "object",
   "additionalProperties": false,
