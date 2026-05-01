@@ -90,7 +90,7 @@ jobs:
 
     steps:
       - name: Checkout caller repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.1.1
 
       - name: Resolve scanner source ref
         id: source
@@ -105,7 +105,7 @@ jobs:
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
 
       - name: Checkout phenoShared scanner source
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.1.1
         with:
           repository: KooshaPari/phenoShared
           ref: ${{ steps.source.outputs.ref }}
@@ -114,7 +114,7 @@ jobs:
             tooling/legacy-enforcement
 
       - name: Set up Python
-        uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
           python-version: ${{ inputs.python-version || '3.12' }}
 
@@ -162,7 +162,7 @@ jobs:
 
       - name: Upload scan reports
         if: ${{ inputs.upload-artifacts != false }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: legacy-tooling-reports
           path: |
@@ -181,7 +181,7 @@ jobs:
 
       - name: Comment PR with findings
         if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b
+        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71
         with:
           script: |
             const fs = require("fs");
