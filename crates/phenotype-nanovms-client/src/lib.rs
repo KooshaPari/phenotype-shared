@@ -7,7 +7,7 @@
 //!
 //! ## Features
 //!
-//! - **Tier 1**: WebAssembly (WASM) sandboxes for lightweight isolation
+//! - **Tier 1**: WebAssembly (Wasm) sandboxes for lightweight isolation
 //! - **Tier 2**: gVisor-based sandboxes for enhanced security
 //! - **Tier 3**: Firecracker microVMs for full virtualization
 //!
@@ -20,7 +20,7 @@
 //! async fn main() -> anyhow::Result<()> {
 //!     let client = NanovmsClient::new();
 //!     
-//!     let config = SandboxConfig::new("my-sandbox", Tier::WASM);
+//!     let config = SandboxConfig::new("my-sandbox", Tier::Wasm);
 //!     let sandbox = client.create_sandbox(config).await?;
 //!     
 //!     let output = client.execute(&sandbox.id, &["echo", "Hello from nanovms!"]).await?;
@@ -89,7 +89,7 @@ pub type Result<T> = std::result::Result<T, NanovmsError>;
 #[serde(rename_all = "snake_case")]
 pub enum Tier {
     /// WebAssembly sandbox - lightweight, fast startup
-    WASM,
+    Wasm,
     /// gVisor sandbox - enhanced security with system call filtering
     Gvisor,
     /// Firecracker microVM - full virtualization
@@ -100,7 +100,7 @@ impl Tier {
     /// Returns the default memory allocation for this tier in MB.
     pub fn default_memory_mb(&self) -> u32 {
         match self {
-            Tier::WASM => 128,
+            Tier::Wasm => 128,
             Tier::Gvisor => 256,
             Tier::Firecracker => 512,
         }
@@ -109,7 +109,7 @@ impl Tier {
     /// Returns the default CPU allocation for this tier.
     pub fn default_cpus(&self) -> u32 {
         match self {
-            Tier::WASM => 1,
+            Tier::Wasm => 1,
             Tier::Gvisor => 1,
             Tier::Firecracker => 2,
         }
@@ -119,7 +119,7 @@ impl Tier {
 impl std::fmt::Display for Tier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Tier::WASM => write!(f, "wasm"),
+            Tier::Wasm => write!(f, "wasm"),
             Tier::Gvisor => write!(f, "gvisor"),
             Tier::Firecracker => write!(f, "firecracker"),
         }
@@ -131,7 +131,7 @@ impl std::str::FromStr for Tier {
     
     fn from_str(s: &str) -> Result<Self> {
         match s.to_lowercase().as_str() {
-            "wasm" | "tier1" | "tier_1" => Ok(Tier::WASM),
+            "wasm" | "tier1" | "tier_1" => Ok(Tier::Wasm),
             "gvisor" | "tier2" | "tier_2" => Ok(Tier::Gvisor),
             "firecracker" | "tier3" | "tier_3" => Ok(Tier::Firecracker),
             _ => Err(NanovmsError::InvalidConfig(format!("unknown tier: {}", s))),
@@ -237,7 +237,7 @@ impl SandboxConfig {
 
 impl Default for SandboxConfig {
     fn default() -> Self {
-        Self::new("default", Tier::WASM)
+        Self::new("default", Tier::Wasm)
     }
 }
 

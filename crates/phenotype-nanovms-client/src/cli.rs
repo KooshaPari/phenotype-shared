@@ -535,6 +535,6 @@ pub mod packages {
         }
 
         serde_json::from_str(&output.stdout)
-            .map_err(|e| NanovmsError::Serialization(e))
+            .map_err(NanovmsError::Serialization)
     }
 }

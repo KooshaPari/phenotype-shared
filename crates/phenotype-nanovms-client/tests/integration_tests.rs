@@ -9,7 +9,7 @@ use phenotype_nanovms_client::{
 #[tokio::test]
 async fn test_mock_client_creation() {
     let client = NanovmsClient::new_mock();
-    assert_eq!(client.default_tier(), Tier::WASM);
+    assert_eq!(client.default_tier(), Tier::Wasm);
 }
 
 #[tokio::test]
@@ -18,7 +18,7 @@ async fn test_create_sandbox() {
     let sandbox = client.create_sandbox_simple("test-sandbox").await.unwrap();
     
     assert_eq!(sandbox.name, "test-sandbox");
-    assert_eq!(sandbox.tier, Tier::WASM);
+    assert_eq!(sandbox.tier, Tier::Wasm);
     assert!(!sandbox.id.is_empty());
 }
 
@@ -43,8 +43,8 @@ async fn test_all_tiers() {
     let client = NanovmsClient::new_mock();
     
     // Test Tier 1: WASM
-    let wasm = client.create_sandbox_with_tier("wasm-box", Tier::WASM).await.unwrap();
-    assert_eq!(wasm.tier, Tier::WASM);
+    let wasm = client.create_sandbox_with_tier("wasm-box", Tier::Wasm).await.unwrap();
+    assert_eq!(wasm.tier, Tier::Wasm);
     
     // Test Tier 2: gVisor
     let gvisor = client.create_sandbox_with_tier("gvisor-box", Tier::Gvisor).await.unwrap();
@@ -197,11 +197,11 @@ async fn test_sandbox_ext_methods() {
 
 #[tokio::test]
 async fn test_tier_default_resources() {
-    assert_eq!(Tier::WASM.default_memory_mb(), 128);
+    assert_eq!(Tier::Wasm.default_memory_mb(), 128);
     assert_eq!(Tier::Gvisor.default_memory_mb(), 256);
     assert_eq!(Tier::Firecracker.default_memory_mb(), 512);
     
-    assert_eq!(Tier::WASM.default_cpus(), 1);
+    assert_eq!(Tier::Wasm.default_cpus(), 1);
     assert_eq!(Tier::Gvisor.default_cpus(), 1);
     assert_eq!(Tier::Firecracker.default_cpus(), 2);
 }
@@ -210,9 +210,9 @@ async fn test_tier_default_resources() {
 async fn test_tier_from_str() {
     use std::str::FromStr;
     
-    assert_eq!(Tier::from_str("wasm").unwrap(), Tier::WASM);
-    assert_eq!(Tier::from_str("WASM").unwrap(), Tier::WASM);
-    assert_eq!(Tier::from_str("tier1").unwrap(), Tier::WASM);
+    assert_eq!(Tier::from_str("wasm").unwrap(), Tier::Wasm);
+    assert_eq!(Tier::from_str("WASM").unwrap(), Tier::Wasm);
+    assert_eq!(Tier::from_str("tier1").unwrap(), Tier::Wasm);
     
     assert_eq!(Tier::from_str("gvisor").unwrap(), Tier::Gvisor);
     assert_eq!(Tier::from_str("tier2").unwrap(), Tier::Gvisor);
@@ -225,7 +225,7 @@ async fn test_tier_from_str() {
 
 #[tokio::test]
 async fn test_tier_display() {
-    assert_eq!(Tier::WASM.to_string(), "wasm");
+    assert_eq!(Tier::Wasm.to_string(), "wasm");
     assert_eq!(Tier::Gvisor.to_string(), "gvisor");
     assert_eq!(Tier::Firecracker.to_string(), "firecracker");
 }

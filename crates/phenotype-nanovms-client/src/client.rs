@@ -24,7 +24,7 @@ impl ClientBuilder {
     pub fn new() -> Self {
         Self {
             transport: None,
-            default_tier: Tier::WASM,
+            default_tier: Tier::Wasm,
             default_timeout: Duration::from_secs(60),
             ops_path: None,
             config_path: None,
@@ -132,7 +132,7 @@ impl NanovmsClient {
     pub fn new() -> Self {
         Self {
             transport: Arc::new(CliTransport::new()),
-            default_tier: Tier::WASM,
+            default_tier: Tier::Wasm,
             default_timeout: Duration::from_secs(60),
         }
     }
@@ -141,7 +141,7 @@ impl NanovmsClient {
     pub fn new_mock() -> Self {
         Self {
             transport: Arc::new(MockTransport::new()),
-            default_tier: Tier::WASM,
+            default_tier: Tier::Wasm,
             default_timeout: Duration::from_secs(60),
         }
     }
@@ -171,7 +171,7 @@ impl NanovmsClient {
     /// #[tokio::main]
     /// async fn main() -> anyhow::Result<()> {
     ///     let client = NanovmsClient::new();
-    ///     let config = SandboxConfig::new("my-sandbox", Tier::WASM);
+    ///     let config = SandboxConfig::new("my-sandbox", Tier::Wasm);
     ///     let sandbox = client.create_sandbox(config).await?;
     ///     println!("Created sandbox: {}", sandbox.id);
     ///     Ok(())

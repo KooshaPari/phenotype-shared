@@ -14,8 +14,8 @@ mod tests {
 
     #[test]
     fn test_tier_default_values() {
-        assert_eq!(Tier::WASM.default_memory_mb(), 128);
-        assert_eq!(Tier::WASM.default_cpus(), 1);
+        assert_eq!(Tier::Wasm.default_memory_mb(), 128);
+        assert_eq!(Tier::Wasm.default_cpus(), 1);
 
         assert_eq!(Tier::Gvisor.default_memory_mb(), 256);
         assert_eq!(Tier::Gvisor.default_cpus(), 1);
@@ -26,17 +26,17 @@ mod tests {
 
     #[test]
     fn test_tier_display() {
-        assert_eq!(format!("{}", Tier::WASM), "wasm");
+        assert_eq!(format!("{}", Tier::Wasm), "wasm");
         assert_eq!(format!("{}", Tier::Gvisor), "gvisor");
         assert_eq!(format!("{}", Tier::Firecracker), "firecracker");
     }
 
     #[test]
     fn test_tier_from_str() {
-        assert_eq!(Tier::from_str("wasm").unwrap(), Tier::WASM);
-        assert_eq!(Tier::from_str("WASM").unwrap(), Tier::WASM);
-        assert_eq!(Tier::from_str("tier1").unwrap(), Tier::WASM);
-        assert_eq!(Tier::from_str("tier_1").unwrap(), Tier::WASM);
+        assert_eq!(Tier::from_str("wasm").unwrap(), Tier::Wasm);
+        assert_eq!(Tier::from_str("WASM").unwrap(), Tier::Wasm);
+        assert_eq!(Tier::from_str("tier1").unwrap(), Tier::Wasm);
+        assert_eq!(Tier::from_str("tier_1").unwrap(), Tier::Wasm);
 
         assert_eq!(Tier::from_str("gvisor").unwrap(), Tier::Gvisor);
         assert_eq!(Tier::from_str("tier2").unwrap(), Tier::Gvisor);
@@ -56,7 +56,7 @@ mod tests {
     fn test_sandbox_config_default() {
         let config = SandboxConfig::default();
         assert_eq!(config.name, "default");
-        assert_eq!(config.tier, Tier::WASM);
+        assert_eq!(config.tier, Tier::Wasm);
         assert_eq!(config.memory_mb, 128);
         assert_eq!(config.cpus, 1);
         assert!(config.env.is_empty());
@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     fn test_sandbox_config_ensure_id() {
-        let mut config = SandboxConfig::new("test", Tier::WASM);
+        let mut config = SandboxConfig::new("test", Tier::Wasm);
         assert!(config.id.is_none());
 
         let id = config.ensure_id().to_string();
@@ -161,7 +161,7 @@ mod tests {
         use serde_json;
 
         let tiers = vec![
-            (Tier::WASM, "\"w_a_s_m\""),
+            (Tier::Wasm, "\"w_a_s_m\""),
             (Tier::Gvisor, "\"gvisor\""),
             (Tier::Firecracker, "\"firecracker\""),
         ];
@@ -200,7 +200,7 @@ mod tests {
         // Test creating sandbox
         let sandbox = client.create_sandbox_simple("test").await.unwrap();
         assert_eq!(sandbox.name, "test");
-        assert_eq!(sandbox.tier, Tier::WASM);
+        assert_eq!(sandbox.tier, Tier::Wasm);
 
         // Test getting sandbox
         let fetched = client.get_sandbox(&sandbox.id).await.unwrap();
@@ -288,7 +288,7 @@ mod tests {
     async fn test_duplicate_sandbox_creation() {
         let client = NanovmsClient::new_mock();
 
-        let config = SandboxConfig::new("duplicate", Tier::WASM)
+        let config = SandboxConfig::new("duplicate", Tier::Wasm)
             .with_id("same-id");
 
         // First creation should succeed

@@ -140,7 +140,7 @@ impl Transport for CliTransport {
 
         // Add tier-specific configuration
         match config.tier {
-            crate::Tier::WASM => {
+            crate::Tier::Wasm => {
                 args.push("-p");
                 args.push("wasm");
             }
